@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Mapbox -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.css' rel='stylesheet' />
+
+    <!-- Mapbox-Plugin Draw -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css" type="text/css" />
+
+    <!-- Mapbox-Plugin Geocoder -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.5.1/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.5.1/mapbox-gl-geocoder.css" type="text/css" />
+
+    <!-- Mapbox-Plugin Turf.js -->
+    <script src="https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js"></script>
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Bulma(CSS Framework) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css" />
+
+    <!-- Font Awesome -->
+    <script src="https://use.fontawesome.com/releases/v5.3.1/js/all.js" defer></script>
+
+    <!-- Bulma extensions -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-extensions@4.0.0/dist/css/bulma-extensions.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bulma-extensions@4.0.0/dist/js/bulma-extensions.min.js"></script>
+
+    <!-- オリジナルスタイルシート -->
+    <link href='./index.css' rel='stylesheet' />
+
+    <title>Efficient Crawler</title>
+</head>
+
+<body>
+    <div id='map'></div>
+
+    <!-- パラメータ設定フォーム -->
+    <header>
+        <nav class="level">
+            <div class="level-left">
+                <!-- 手法選択 -->
+                <div class="level-item">
+                    <div class="select is-success">
+                        <select id="method-select">
+                            <option value="both" selected>Both Methods</option>
+                            <option value="proposed">Only Proposed</option>
+                            <option value="baseline">Only Baseline</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- エリア名(サブディレクトリ名) -->
+                <div class="level-item">
+                    <input id="area-name" class="input is-rounded is-success parameters" type="text" placeholder="Area Name">
+                </div>
+                <!-- プレイスタイプ -->
+                <div class="level-item">
+                    <input id="place-type" class="input is-rounded is-success parameters" type="text" value="" placeholder="Place Type">
+                </div>
+                <!-- セルサイズ -->
+                <div class="level-item">
+                    <input id="cell-size" class="input is-rounded is-success parameters" type="text" placeholder="Cell Size(m)">
+                </div>
+                <!-- ページング選択 -->
+                <div class="level-item">
+                    <input id="paging-switch" type="checkbox" name="paging-switch" class="switch is-success is-rounded"
+                        checked="checked">
+                    <label for="paging-switch">Paging</label>
+                </div>
+                <!-- クローリング実行 -->
+                <div class="level-item">
+                    <button id="crawl-button" class="button is-primary is-outlined is-rounded">Crawl</button>
+                </div>
+                <!-- ファイルアップロード + 可視化 -->
+                <div class="level-item">
+                    <div class="file is-primary">
+                        <label class="file-label">
+                            <input class="file-input" type="file" name="result-upload" id="result-upload">
+                            <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-layer-group"></i>
+                                    </span>
+                                <span class="file-label">
+                                    Visualize
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 収集結果表示ボックス -->
+    <div id="result-box">
+        <div class="card">
+            <header class="card-header">
+                <p class="card-header-title is-centered">
+                    Detail Result
+                </p>
+            </header>
+            <footer class="card-footer">
+                <div class="card-footer-item">
+                    <input id="proposed" class="is-checkradio is-success" type="radio" name="method-toggle">
+                    <label for="proposed">
+                        Proposed
+                    </label>
+                </div>
+                <div class="card-footer-item">
+                    <input id="baseline" class="is-checkradio is-success" type="radio" name="method-toggle">
+                    <label for="baseline">
+                        Baseline
+                    </label>
+                </div>
+            </footer>
+            <div class="card-content">
+                <div class="content" id="result-content">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="./map.js"></script>
+    <script type="text/javascript" src="./visualize.js"></script>
+</body>
+
+</html>
