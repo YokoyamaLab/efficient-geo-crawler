@@ -49,6 +49,7 @@ const crawlButton = document.getElementById('crawl-button');
 crawlButton.addEventListener('click', () => {
     // パラメータ設定
     const polygon = draw.getAll();
+    const apiKey = document.getElementById('api-key').value;
     const methodType = document.getElementById('method-select').value;
     const areaName = document.getElementById('area-name').value;
     const placeType = document.getElementById('place-type').value;
@@ -59,6 +60,10 @@ crawlButton.addEventListener('click', () => {
     }
 
     // 未入力チェック
+    if (!apiKey) {
+        alert('Set your API Key(Google Places API).')
+    }
+
     if (polygon['features'].length === 0) {
         alert('Set target polygon.');
         return;
@@ -77,6 +82,7 @@ crawlButton.addEventListener('click', () => {
     }
 
     const parameter = {
+        "api-key": apiKey,
         "polygon": polygon,
         "area-name": areaName,
         "place-type": placeType,

@@ -10,6 +10,7 @@ html, body {
 }
 
 .level {
+    width: 100%;
     position: fixed;
     top: 0;
     background-color: #fff;
@@ -17,7 +18,11 @@ html, body {
 }
 
 .parameters {
-    width: 150px;
+    width: 175px;
+}
+
+.mapboxgl-ctrl-top-right{
+    margin-top: 70px;
 }
 
 #result-box {

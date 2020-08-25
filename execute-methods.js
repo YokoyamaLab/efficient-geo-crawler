@@ -14,10 +14,11 @@ const calcPointGrid = require(`${__dirname}/baseline/point-grid`);
 const crawlerGrid = require(`${__dirname}/baseline/crawler-grid`);
 
 
-exports.executeProposed = async (parameter, apiKey) => {
+exports.executeProposed = async (parameter) => {
     console.log('-- Proposed Method --');
 
     // ユーザ側から得られたパラメータ
+    const apiKey = parameter['api-key'];
     const coordinates = parameter['polygon']['features'][0]['geometry']['coordinates'];
     const placeType = parameter['place-type'];
     const areaName = parameter['area-name'];
@@ -51,9 +52,10 @@ exports.executeProposed = async (parameter, apiKey) => {
     return proposedResult;
 };
 
-exports.executeBaseline = async (parameter, apiKey) => {
+exports.executeBaseline = async (parameter) => {
     console.log('\n-- Baseline Method --');
 
+    const apiKey = parameter['api-key'];
     const coordinates = parameter['polygon']['features'][0]['geometry']['coordinates'];
     const placeType = parameter['place-type'];
     const areaName = parameter['area-name'];
