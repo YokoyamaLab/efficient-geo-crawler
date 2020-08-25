@@ -106,7 +106,7 @@ const executeOnlyBaseline = async (io, apiKey) => {
 };
 
 const main = async (port) => {
-    console.log('test');
+    console.log('Your branch: master');
     const { server, io } = await setMap(port);
 
     // Google Places APIのAPIキー
