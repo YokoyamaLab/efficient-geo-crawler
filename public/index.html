@@ -48,7 +48,7 @@
             <div class="level-left">
                 <!-- APIキー -->
                 <div class="level-item">
-                    <input id="api-key" class="input is-success parameters" type="text" placeholder="API Key(Google Places API)">
+                    <input id="api-key" class="input is-success parameters" type="text" placeholder="API Key">
                 </div>
 
                 <!-- 手法選択 -->
@@ -82,6 +82,11 @@
                 <!-- クローリング実行 -->
                 <div class="level-item">
                     <button id="crawl-button" class="button is-primary is-outlined is-rounded">Crawl</button>
+                </div>
+
+                <!-- 収集結果保存ボタン(ユーザ用) -->
+                <div class="level-item">
+                    <button id="save-button" class="button is-primary is-static">Save</button>
                 </div>
                 <!-- ファイルアップロード + 可視化 -->
                 <div class="level-item">
@@ -133,6 +138,7 @@
     </div>
 
     <script type="text/javascript" src="./map.js"></script>
+    <script type="text/javascript" src="./save.js"></script>
     <script type="text/javascript" src="./visualize.js"></script>
 </body>
 

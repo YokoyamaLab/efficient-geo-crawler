@@ -16,6 +16,7 @@ const setMap = async (port) => {
     const indexHTML = fs.readFileSync(`${__dirname}/public/index.html`, 'utf8');
     const indexCSS = fs.readFileSync(`${__dirname}/public/index.css`, 'utf8');
     const mapJS = fs.readFileSync(`${__dirname}/public/map.js`, 'utf8');
+    const saveJS = fs.readFileSync(`${__dirname}/public/save.js`, 'utf8');
     const visualizeJS = fs.readFileSync(`${__dirname}/public/visualize.js`, 'utf8');
 
     // WebServer, WebSocket起動
@@ -46,6 +47,12 @@ const setMap = async (port) => {
             case '/map.js':
                 res.writeHead(200, { 'Content-Type': 'text/javascript' });
                 res.write(mapJS);
+                res.end();
+                break;
+
+            case '/save.js':
+                res.writeHead(200, { 'Content-Type': 'text/javascript' });
+                res.write(saveJS);
                 res.end();
                 break;
 
@@ -106,7 +113,7 @@ const executeOnlyBaseline = async (io) => {
 };
 
 const main = async (port) => {
-    console.log('Your branch: dev');
+    console.log('Your branch: prod');
     const { server, io } = await setMap(port);
 
     // Google Places APIのAPIキー

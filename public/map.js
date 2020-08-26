@@ -107,6 +107,7 @@ crawlButton.addEventListener('click', () => {
 });
 
 // 収集データ読み込み(提案手法)
+let proposedResult;
 let proposedDetailResult;
 socket.on('emit-proposed-result', (output) => {
     console.log(output);
@@ -131,6 +132,10 @@ socket.on('emit-proposed-result', (output) => {
         document.getElementById('proposed').checked = false;
     }
 
+    // ユーザ保存用
+    proposedResult = JSON.stringify(output, null, '\t');
+
+    // 結果可視化用
     proposedDetailResult = output['detail'];
     map.addSource('proposed-result', {
         'type': 'geojson',
@@ -144,6 +149,7 @@ socket.on('emit-proposed-result', (output) => {
 });
 
 // 収集データを読み込み(ベースライン手法)
+let baselineResult;
 let baselineDetailResult;
 socket.on('emit-baseline-result', (output) => {
     console.log(output);
@@ -167,6 +173,10 @@ socket.on('emit-baseline-result', (output) => {
         document.getElementById('baseline').checked = false;
     }
 
+    // ユーザ保存用
+    baselineResult = JSON.stringify(output, null, '\t');
+
+    // 結果可視化用
     baselineDetailResult = output['detail'];
     map.addSource('baseline-result', {
         'type': 'geojson',
@@ -189,6 +199,10 @@ proposedToggle.onclick = () => {
         alert('Execute crawling');
         proposedToggle.checked = false;
         return;
+    }
+
+    if (saveButton.classList.contains('is-static')) {
+        saveButton.classList.remove('is-static');
     }
 
     if (resultContent.innerHTML) {
@@ -323,6 +337,10 @@ baselineToggle.onclick = () => {
         alert('Execute crawling');
         baselineToggle.checked = false;
         return;
+    }
+
+    if (saveButton.classList.contains('is-static')) {
+        saveButton.classList.remove('is-static');
     }
 
     if (resultContent.innerHTML) {
