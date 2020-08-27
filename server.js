@@ -77,7 +77,6 @@ const executeBothMethods = async (io) => {
         socket.on('execute-both-methods', async (parameter) => {
             const proposedResult = await executeProposed(parameter);
             const baselineResult = await executeBaseline(parameter);
-            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
             io.emit('emit-proposed-result', proposedResult);
             io.emit('emit-baseline-result', baselineResult);
 
@@ -91,7 +90,6 @@ const executeOnlyProposed = async (io) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-proposed', async (parameter) => {
             const proposedResult = await executeProposed(parameter);
-            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(proposedResult['target-polygon'], null, '\t'));
             io.emit('emit-proposed-result', proposedResult);
 
             console.log('\n-- Check out the results on your browser --\n');
@@ -104,7 +102,6 @@ const executeOnlyBaseline = async (io) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-baseline', async (parameter) => {
             const baselineResult = await executeBaseline(parameter);
-            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
             io.emit('emit-baseline-result', baselineResult);
 
             console.log('\n-- Check out the results on your browser --\n');
@@ -116,8 +113,6 @@ const main = async (port) => {
     console.log('Your branch: prod');
     const { server, io } = await setMap(port);
 
-    // Google Places APIのAPIキー
-    // const apiKey = process.env.APIKEY;
     executeBothMethods(io);
     executeOnlyProposed(io);
     executeOnlyBaseline(io);

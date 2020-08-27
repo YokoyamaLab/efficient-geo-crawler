@@ -48,7 +48,7 @@
             <div class="level-left">
                 <!-- APIキー -->
                 <div class="level-item">
-                    <input id="api-key" class="input is-success parameters" type="text" placeholder="API Key">
+                    <input id="api-key" class="input is-success apikey" type="text" placeholder="Your API Key (Google Places API)">
                 </div>
 
                 <!-- 手法選択 -->
@@ -60,10 +60,6 @@
                             <option value="baseline">Only Baseline</option>
                         </select>
                     </div>
-                </div>
-                <!-- エリア名(サブディレクトリ名) -->
-                <div class="level-item">
-                    <input id="area-name" class="input is-rounded is-success parameters" type="text" placeholder="Area Name">
                 </div>
                 <!-- プレイスタイプ -->
                 <div class="level-item">
@@ -83,10 +79,14 @@
                 <div class="level-item">
                     <button id="crawl-button" class="button is-primary is-outlined is-rounded">Crawl</button>
                 </div>
-
                 <!-- 収集結果保存ボタン(ユーザ用) -->
                 <div class="level-item">
-                    <button id="save-button" class="button is-primary is-static">Save</button>
+                    <button id="save-button" class="button is-primary is-static">
+                        <span class="icon">
+                            <i class="fas fa-file-download"></i>
+                        </span>
+                        <span>Save</span>
+                    </button>
                 </div>
                 <!-- ファイルアップロード + 可視化 -->
                 <div class="level-item">

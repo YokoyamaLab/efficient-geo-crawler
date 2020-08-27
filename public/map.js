@@ -51,7 +51,6 @@ crawlButton.addEventListener('click', () => {
     const polygon = draw.getAll();
     const apiKey = document.getElementById('api-key').value;
     const methodType = document.getElementById('method-select').value;
-    const areaName = document.getElementById('area-name').value;
     const placeType = document.getElementById('place-type').value;
     const pagingIsOn = document.getElementById('paging-switch').checked;
     let cellSize;
@@ -68,10 +67,6 @@ crawlButton.addEventListener('click', () => {
         alert('Set target polygon.');
         return;
     }
-    if (!areaName || areaName === '/') {
-        alert('Set valid area name.');
-        return;
-    }
     if (!placeType) {
         alert('Set place type.');
         return;
@@ -84,7 +79,6 @@ crawlButton.addEventListener('click', () => {
     const parameter = {
         "api-key": apiKey,
         "polygon": polygon,
-        "area-name": areaName,
         "place-type": placeType,
         "paging-is-on": pagingIsOn,
     };

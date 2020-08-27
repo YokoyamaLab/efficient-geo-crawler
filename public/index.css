@@ -17,8 +17,12 @@ html, body {
     padding: 10px;
 }
 
+.apikey {
+    width: 280px;
+}
+
 .parameters {
-    width: 155px;
+    width: 160px;
 }
 
 .mapboxgl-ctrl-top-right{
