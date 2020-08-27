@@ -7,8 +7,6 @@ const executeMethods = require(`${__dirname}/execute-methods.js`);
 const executeProposed = executeMethods.executeProposed;
 const executeBaseline = executeMethods.executeBaseline;
 
-// .envファイルから環境変数読み込み(APIキー)
-require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // 1. 地図を描画
 const setMap = async (port) => {
