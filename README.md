@@ -1,7 +1,7 @@
 # Efficient Geo Crawler
 This app is a GIS to crawl nearby place data for a target area with [Google Places API](https://developers.google.com/places/web-service/overview) and visualize them quickly.
 
-<!-- ![demo-gif](./demo.gif) -->
+![demo-gif](./demo.gif)
 [The Sample App is Here.](https://efficient-geo-crawler.herokuapp.com/)
 
 ## Quick Start
