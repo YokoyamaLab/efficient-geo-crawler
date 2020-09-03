@@ -19,18 +19,18 @@ $ heroku open
 
 # Usage
 ## Crawling Settings
-* Target Area
+* Target Area:  <br>
 You draw a target area freely with the polygon tool.
-* API Key (Google Places API)
+* API Key (Google Places API): <br>
 [Get your API Key](https://developers.google.com/places/web-service/get-api-key)
 
-* Method Type
+* Method Type:<br>
 Choose either Intersection-based Method (Proposed Method) or Grid-based Method (Baseline Method), or both.
-* Place Type
+* Place Type:<br>
 Select place type that you want to crawl. ([Place Type List](https://developers.google.com/places/web-service/supported_types))
-* Cell Size(m)
+* Cell Size(m):<br>
 This parameter is needed to decide the size of the grid cells in Baseline method. The lower the value of this parameter, the more comprehensively the place data can be crawled.
-* Paging
+* Paging:<br>
 When this is enabled, you can crawl max 60 place data for a single point. ([Detail](https://developers.google.com/places/web-service/search#PlaceSearchRequests))
 
 # Libraries
