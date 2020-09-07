@@ -1,13 +1,10 @@
-const googleMaps = require('@google/maps');
+const { Client } = require("@googlemaps/google-maps-services-js");
 const turf = require('@turf/turf');
 const { sleep } = require('sleep');
 
 
 const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagingIsOn) => {
-    const googleMapsClient = googleMaps.createClient({
-        key: apiKey,
-        Promise
-    });
+    const googleClient = new Client();
 
     const cells = grid['features']; // グリッドの座標群
     let cellId = 1;
@@ -21,18 +18,21 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
         const queryPoint = cell['geometry']['coordinates'] // lng, lat
 
         // 1~20件
-        const firstResult = await googleMapsClient.placesNearby({
-            location: [queryPoint[1], queryPoint[0]],
-            rankby: 'distance',
-            type: placeType
-        }).asPromise()
-            .catch((err) => {
-                console.log(err);
-            });
-        places.push(...firstResult.json.results);
+        const firstResult = await googleClient.placesNearby({
+            params: {
+                location: [queryPoint[1], queryPoint[0]],
+                rankby: 'distance',
+                type: placeType,
+                key: apiKey
+            },
+            timeout: 1000
+        }).catch((err) => {
+            console.log(err);
+        });
+        places.push(...firstResult.data.results);
         queryTimes += 1;
         console.log('1st Query!');
-        if (!firstResult['json']['next_page_token']) {
+        if (!firstResult['data']['next_page_token']) {
             console.log('No 2nd Page');
             continue;
         } // ページトークンがない場合は，スキップ
@@ -41,29 +41,35 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
             case true:
                 // 21~40件
                 sleep(3);
-                const secondResult = await googleMapsClient.placesNearby({
-                    pagetoken: firstResult['json']['next_page_token']
-                }).asPromise()
-                    .catch((err) => {
-                        console.log(err);
-                    });
-                places.push(...secondResult.json.results);
+                const secondResult = await googleClient.placesNearby({
+                    params: {
+                        pagetoken: firstResult['data']['next_page_token'],
+                        key: apiKey
+                    },
+                    timeout: 1000
+                }).catch((err) => {
+                    console.log(err);
+                });
+                places.push(...secondResult.data.results);
                 queryTimes += 1;
                 console.log('2nd Query!!');
-                if (!secondResult['json']['next_page_token']) {
+                if (!secondResult['data']['next_page_token']) {
                     console.log('No 3rd Page');
                     continue;
                 }
 
                 // 41~60件
                 sleep(3);
-                const thirdResult = await googleMapsClient.placesNearby({
-                    pagetoken: secondResult['json']['next_page_token']
-                }).asPromise()
-                    .catch((err) => {
-                        console.log(err);
-                    });
-                places.push(...thirdResult.json.results);
+                const thirdResult = await googleClient.placesNearby({
+                    params: {
+                        pagetoken: secondResult['data']['next_page_token'],
+                        key: apiKey
+                    },
+                    timeout: 1000
+                }).catch((err) => {
+                    console.log(err);
+                });
+                places.push(...thirdResult.data.results);
                 queryTimes += 1;
                 console.log('3rd Query!!!');
                 break;

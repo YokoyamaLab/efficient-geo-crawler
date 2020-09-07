@@ -1,4 +1,4 @@
-const googleMaps = require('@google/maps');
+const { Client } = require("@googlemaps/google-maps-services-js");
 const turf = require('@turf/turf');
 // const rbush = require('rbush');
 // const knn = require('rbush-knn');
@@ -7,25 +7,28 @@ const { sleep } = require('sleep');
 
 // 1. 単一のクエリ点を用いてクローリングする
 // ※ページングを考慮
-const crawlQueryPoint = async (googleMapsClient, queryPoint, crawlingArea, placeType, pagingIsOn) => {
+const crawlQueryPoint = async (apiKey, googleClient, queryPoint, crawlingArea, placeType, pagingIsOn) => {
     const location = [queryPoint.coordinate[1], queryPoint.coordinate[0]]; // lat, lng
 
     const allResults = [];
     let queryTimes = 0;
 
     // 1~20件
-    const firstResults = await googleMapsClient.placesNearby({
-        location,
-        rankby: 'distance',
-        type: placeType
-    }).asPromise()
-        .catch((err) => {
-            console.log(err);
-        });
+    const firstResults = await googleClient.placesNearby({
+        params: {
+            location,
+            rankby: 'distance',
+            type: placeType,
+            key: apiKey
+        },
+        timeout: 1000
+    }).catch((err) => {
+        console.log(err);
+    });
     queryTimes += 1;
-    allResults.push(...firstResults.json.results);
+    allResults.push(...firstResults.data.results);
     console.log('1st Query!');
-    if (!firstResults['json']['next_page_token']) {
+    if (!firstResults['data']['next_page_token']) {
         console.log('No 2nd Page');
     }
 
@@ -34,29 +37,33 @@ const crawlQueryPoint = async (googleMapsClient, queryPoint, crawlingArea, place
         case true:
             // 21~40件
             sleep(3);
-            const secondResults = await googleMapsClient.placesNearby({
-                pagetoken: firstResults['json']['next_page_token']
-            }).asPromise()
-                .catch((err) => {
-                    console.log(err);
-                });
+            const secondResults = await googleClient.placesNearby({
+                params: {
+                    pagetoken: firstResults['data']['next_page_token'],
+                    key: apiKey
+                }
+            }).catch((err) => {
+                console.log(err);
+            });
             queryTimes += 1;
-            allResults.push(...secondResults.json.results);
+            allResults.push(...secondResults.data.results);
             console.log('2nd Query!!');
-            if (!secondResults['json']['next_page_token']) {
+            if (!secondResults['data']['next_page_token']) {
                 console.log('No 3rd Page');
             }
 
             // 41~60件
             sleep(3);
-            const thirdResults = await googleMapsClient.placesNearby({
-                pagetoken: secondResults['json']['next_page_token']
-            }).asPromise()
-                .catch((err) => {
-                    console.log(err);
-                });
+            const thirdResults = await googleClient.placesNearby({
+                params: {
+                    pagetoken: secondResults['data']['next_page_token'],
+                    key: apiKey
+                }
+            }).catch((err) => {
+                console.log(err);
+            });
             queryTimes += 1;
-            allResults.push(...thirdResults.json.results);
+            allResults.push(...thirdResults.data.results);
             console.log('3rd Query!!!');
             break;
 
@@ -109,17 +116,18 @@ const crawlQueryPoint = async (googleMapsClient, queryPoint, crawlingArea, place
 // 2. intersection-based method本体
 const crawlerIntersections = async (apiKey, intersections, crawlingArea, placeType, pagingIsOn) => {
     // Places APIのAPIキー
-    const googleMapsClient = googleMaps.createClient({
-        key: apiKey,
-        Promise
-    });
+    // const googleMapsClient = googleMaps.createClient({
+    //     key: apiKey,
+    //     Promise
+    // });
+    const googleClient = new Client();
 
     const doneQueries = [];
     for (let i = 0; i < intersections.length; i++) {
         if (i === 0) { // 最もスコアの大きい交差点
             console.log(`Start with ${intersections[i].id} (score: ${intersections[i].score})`);
 
-            const doneQuery = await crawlQueryPoint(googleMapsClient, intersections[i], crawlingArea, placeType, pagingIsOn);
+            const doneQuery = await crawlQueryPoint(apiKey, googleClient, intersections[i], crawlingArea, placeType, pagingIsOn);
             doneQueries.push(doneQuery);
         } else { // それ以外
             const nextQueryIsOutAllQueryCircles = [];
@@ -140,7 +148,7 @@ const crawlerIntersections = async (apiKey, intersections, crawlingArea, placeTy
             if (nextQueryIsOutAllQueryCircles.length === doneQueries.length) {
                 console.log(`Next Query is ${intersections[i].id} (score: ${intersections[i].score})`);
                 sleep(1);
-                const doneQuery = await crawlQueryPoint(googleMapsClient, intersections[i], crawlingArea, placeType, pagingIsOn);
+                const doneQuery = await crawlQueryPoint(apiKey, googleClient, intersections[i], crawlingArea, placeType, pagingIsOn);
                 doneQueries.push(doneQuery);
             }
         }
