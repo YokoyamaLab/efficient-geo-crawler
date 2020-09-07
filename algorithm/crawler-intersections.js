@@ -115,11 +115,6 @@ const crawlQueryPoint = async (apiKey, googleClient, queryPoint, crawlingArea, p
 
 // 2. intersection-based method本体
 const crawlerIntersections = async (apiKey, intersections, crawlingArea, placeType, pagingIsOn) => {
-    // Places APIのAPIキー
-    // const googleMapsClient = googleMaps.createClient({
-    //     key: apiKey,
-    //     Promise
-    // });
     const googleClient = new Client();
 
     const doneQueries = [];
