@@ -34,6 +34,7 @@ Choose either Intersection-based Method (Proposed Method) or Grid-based Method (
 Select a place type that you want to crawl. ([Place Type List](https://developers.google.com/places/web-service/supported_types))
 <br>
 example: restaurant, lodging, store...
+
 * Cell Size(m) - **Required only when using Proposed Method**:<br>
 This parameter is needed to decide the size of the grid cells in Baseline method. The lower the value of this parameter, the more comprehensively the place data can be crawled.
 * Paging - **Optional**:<br>
