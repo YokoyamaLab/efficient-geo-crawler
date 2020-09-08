@@ -32,7 +32,6 @@ You draw a target area freely with the polygon tool.
 Choose either Intersection-based Method (Proposed Method) or Grid-based Method (Baseline Method), or both.
 * Place Type - **Required**:<br>
 Select a place type that you want to crawl. ([Place Type List](https://developers.google.com/places/web-service/supported_types))
-<br>
 example: restaurant, lodging, store...
 
 * Cell Size(m) - **Required only when using Proposed Method**:<br>
