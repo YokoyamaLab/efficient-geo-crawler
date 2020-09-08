@@ -55,10 +55,13 @@ example: Paris, Seattle, Tokyo...
 
 
 # Libraries
+## Server
 * [@derhuerst/query-overpass](https://github.com/derhuerst/query-overpass)
 * [@google/maps](https://github.com/googlemaps/google-maps-services-js/tree/%40google/maps)
 * [Turf.js](https://turfjs.org/)
 * [Socket.io](https://socket.io/)
+
+## Front
 * [Mapbox-GL-JS](https://github.com/mapbox/mapbox-gl-js)
 * [Mapbox-GL-draw](https://github.com/mapbox/mapbox-gl-draw)
 * [Mapbox-GL-geocoder](https://github.com/mapbox/mapbox-gl-geocoder)
