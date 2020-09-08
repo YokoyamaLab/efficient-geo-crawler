@@ -25,7 +25,7 @@ Execute crawling when you click the button. After finishing crawling, you get th
 ### Crawling Settings
 * Target Area - **Required**:  <br>
 You draw a target area freely with the polygon tool.
-* API Key (Google Places API): <br>
+* API Key (Google Places API) - **Required**: <br>
 [Get your API Key](https://developers.google.com/places/web-service/get-api-key)
 
 * Method Type - **Required**:<br>
