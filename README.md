@@ -1,10 +1,14 @@
 # Efficient Geo Crawler
-This app is a GIS to crawl nearby place data for a target area with [Google Places API](https://developers.google.com/places/web-service/overview) and visualize them quickly.
+This app is a GIS to crawl nearby place data in a target area with [Google Places API](https://cloud.google.com/maps-platform/places) and visualize them quickly. You can crawl place data with Intersection-based Method (Proposed Method) and Grid-based Method (Baseline Method), and then compare their efficiency.
 
-![demo-gif](./demo.gif)
-[The Sample App is Here.](https://efficient-geo-crawler.herokuapp.com/)
+## Demo
+[Sample is Here.](https://efficient-geo-crawler.herokuapp.com/)
+![demo-gif](./demo/demo.gif)
 
 ## Quick Start
+This GIS is designed to run on your Heroku environment.<br>
+You need [Heroku account](https://signup.heroku.com/) before quick start.
+
 ```
 # 1. Clone to your local
 $ git clone https://github.com/YokoyamaLab/efficient-geo-crawler.git
@@ -19,23 +23,26 @@ $ heroku open
 
 # Usage
 ## Main Feature
-* Crawl:<br>
+* Crawl&Visualize:<br>
 Execute crawling when you click the button. After finishing crawling, you get the detail result in the Result Console and the visualization result on the map.
 
 ### Crawling Settings
 * Target Area - **Required**:  <br>
 You draw a target area freely with the polygon tool.
+
 * API Key (Google Places API) - **Required**: <br>
-[Get your API Key](https://developers.google.com/places/web-service/get-api-key)
+[Get your API Key.](https://developers.google.com/places/web-service/get-api-key)
 
 * Method Type - **Required**:<br>
-Choose either Intersection-based Method (Proposed Method) or Grid-based Method (Baseline Method), or both.
+Choose both methods or either Proposed Method or Baseline Method.
+
 * Place Type - **Required**:<br>
 Select a place type that you want to crawl. ([Place Type List](https://developers.google.com/places/web-service/supported_types))
 <br>example: restaurant, lodging, store...
 
 * Cell Size(m) - **Required only when using Proposed Method**:<br>
-This parameter is needed to decide the size of the grid cells in Baseline method. The lower the value of this parameter, the more comprehensively the place data can be crawled.
+This parameter is needed to decide the size of the grid cells in Baseline method. The smaller this parameter, the more data you can crawl.
+
 * Paging - **Optional**:<br>
 When this is enabled, you can crawl max 60 place data for a single point. ([Detail](https://developers.google.com/places/web-service/search#PlaceSearchRequests))
 
@@ -45,7 +52,7 @@ When this is enabled, you can crawl max 60 place data for a single point. ([Deta
 ## Sub Features
 * Save:<br>
 You can save the result with JSON file to your local.
-* Visualize:<br>
+* Only Visualize:<br>
 You can visualize the saved result without crawling.
 * Area Search:<br>
 You can search for the area where you want to crawl data.<br>
