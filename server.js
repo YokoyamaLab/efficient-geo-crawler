@@ -1,7 +1,6 @@
 const http = require('http');
 const fs = require('fs');
 const Socket = require('socket.io');
-const path = require('path');
 
 const executeMethods = require(`${__dirname}/execute-methods.js`);
 const executeProposed = executeMethods.executeProposed;

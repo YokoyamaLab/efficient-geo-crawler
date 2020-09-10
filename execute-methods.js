@@ -1,8 +1,6 @@
-const fs = require('fs');
 const turf = require('@turf/turf');
 
 const calcBbox = require(`${__dirname}/mymodules/calc-bbox.js`);
-const createSubdirectory = require(`${__dirname}/mymodules/create-subdirectory.js`);
 
 // 提案手法
 const crawlRoadMaps = require(`${__dirname}/algorithm/crawl-road-maps`);
