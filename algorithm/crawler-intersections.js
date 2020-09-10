@@ -1,9 +1,7 @@
 const { Client } = require("@googlemaps/google-maps-services-js");
 const turf = require('@turf/turf');
-// const rbush = require('rbush');
-// const knn = require('rbush-knn');
-const { sleep } = require('sleep');
 
+const sleep = require(`${__dirname}/../mymodules/sleep.js`);
 
 // 1. 単一のクエリ点を用いてクローリングする
 // ※ページングを考慮

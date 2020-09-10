@@ -1,7 +1,7 @@
 const { Client } = require("@googlemaps/google-maps-services-js");
 const turf = require('@turf/turf');
-const { sleep } = require('sleep');
 
+const sleep = require(`${__dirname}/../mymodules/sleep.js`);
 
 const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagingIsOn) => {
     const googleClient = new Client();
