@@ -1,22 +1,18 @@
-# Efficient Crawling GIS
-## UI
+# Efficient Geo Crawler
+This branch is for developers.
+
 ![image](https://user-images.githubusercontent.com/38425740/91004413-18037880-e60f-11ea-9ba8-ddea62b38bbf.png)
 
-# How to Use
-## クローリング設定
-### 環境変数(.envファイル)
-1. Google Places APIのAPIキー
 
-### UI上のフォーム
-1. Area Name: 結果を保存するoutputディレクトリ直下のサブディレクトリ名
-2. Place Type: 収集するプレイスデータの種類([参考](https://developers.google.com/places/web-service/supported_types))
-3. Cell Size(m): Grid-based Method(ベースライン手法)で用いるセルの大きさ
-
-## コマンド例
+## Commands
 ```
-# ユーザ用
+# Normal
 $ npm start
 
-# 開発者用
+# With nodemon
 $ npm run dev
 ```
+
+## Requirement
+* Node.js: ^12.18.3
+* npm: ^6.14.6
