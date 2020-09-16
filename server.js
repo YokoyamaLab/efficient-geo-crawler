@@ -1,14 +1,15 @@
 const http = require('http');
 const fs = require('fs');
-const Socket = require('socket.io');
 const path = require('path');
+
+const Socket = require('socket.io');
+const mongoClient = require('mongodb').MongoClient;
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const executeMethods = require(`${__dirname}/execute-methods.js`);
 const executeProposed = executeMethods.executeProposed;
 const executeBaseline = executeMethods.executeBaseline;
 
-// .envファイルから環境変数読み込み(APIキー)
-require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // 1. 地図を描画
 const setMap = async (port) => {
@@ -70,11 +71,35 @@ const executeBothMethods = async (io, apiKey) => {
         socket.on('execute-both-methods', async (parameter) => {
             const proposedResult = await executeProposed(parameter, apiKey);
             const baselineResult = await executeBaseline(parameter, apiKey);
-            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
             io.emit('emit-proposed-result', proposedResult);
             io.emit('emit-baseline-result', baselineResult);
 
-            console.log('\n-- Check out the results on your browser --\n');
+            // 保存処理
+            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
+
+            // MongoDB設定
+            const dbUrl = 'mongodb://localhost:27017';
+            const connectOption = {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+            };
+            const dbName = process.env.DBNAME || 'efficient-geo-crawler-db';
+
+            // DBへ接続＋保存
+            await mongoClient.connect(dbUrl, connectOption, async (err, client) => {
+                if (err) {
+                    console.log(err);
+                }
+                await console.log("Connected successfully to server");
+                const db = client.db(dbName);
+                const collection = db.collection(parameter['area-name']);
+                await collection.insertMany([proposedResult, baselineResult]);
+                console.log('Saved to MongoDB');
+                client.close();
+            });
+
+            console.log('\n-- Saved the result in your local and MongoDB --');
+            console.log('-- Check out the results on your browser --\n');
         });
     });
 };
