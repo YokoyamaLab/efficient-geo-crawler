@@ -1,6 +1,5 @@
 const { Client } = require("@googlemaps/google-maps-services-js");
 const turf = require('@turf/turf');
-const mongoClient = require('mongodb').MongoClient;
 
 const sleep = require(`${__dirname}/../mymodules/sleep.js`);
 
