@@ -3,12 +3,12 @@ const fs = require('fs');
 const path = require('path');
 
 const Socket = require('socket.io');
-const mongoClient = require('mongodb').MongoClient;
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const executeMethods = require(`${__dirname}/execute-methods.js`);
 const executeProposed = executeMethods.executeProposed;
 const executeBaseline = executeMethods.executeBaseline;
+const savePlacesToDb = require(`${__dirname}/mymodules/save-places-to-db.js`);
 
 
 // 1. 地図を描画
@@ -77,44 +77,11 @@ const executeBothMethods = async (io, apiKey) => {
             const baselineResult = baselineResults['result-for-web'];
             io.emit('emit-baseline-result', baselineResult);
             fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
-
             console.log('\n-- Check out the results on your browser --\n');
 
-            // 両手法で収集した全プレイスデータから固有のプレイスデータだけ抽出する
+            // DBへ保存
             const dbAllPlaces = proposedResults['result-for-db'].concat(baselineResults['result-for-db']);
-            const dbUniquePlaces = dbAllPlaces.filter((element, index, self) =>
-                self.findIndex(e =>
-                    e['place_id'] === element['place_id']
-                ) === index
-            );
-            console.log(`proposed:${proposedResults['result-for-db'].length}`);
-            console.log(`baseline:${baselineResults['result-for-db'].length}`);
-            console.log(`Unique:${dbUniquePlaces.length}`);
-            
-            // MongoDB設定
-            const dbUrl = 'mongodb://localhost:27017';
-            const connectOption = {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            };
-            const dbName = process.env.DBNAME || 'geo-crawler-db';
-
-            // DBへ接続＋保存
-            await mongoClient.connect(dbUrl, connectOption, async (err, client) => {
-                if (err) {
-                    console.log(err);
-                }
-
-                console.log("Connected successfully to server");
-                const db = client.db(dbName);
-                const collection = await db.createCollection(parameter['area-name']);
-                await collection.insertMany(dbUniquePlaces);
-
-                console.log('Saved all places to MongoDB');
-                console.log(`DB Name: ${dbName}`);
-                console.log(`Collection Name: ${parameter['area-name']}`);
-                client.close();
-            });
+            await savePlacesToDb(parameter, dbAllPlaces);
         });
     });
 };
@@ -123,11 +90,14 @@ const executeBothMethods = async (io, apiKey) => {
 const executeOnlyProposed = async (io, apiKey) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-proposed', async (parameter) => {
-            const proposedResult = await executeProposed(parameter, apiKey);
-            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(proposedResult['target-polygon'], null, '\t'));
+            const proposedResults = await executeProposed(parameter, apiKey);
+            const proposedResult = proposedResults['result-for-web'];
             io.emit('emit-proposed-result', proposedResult);
-
+            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(proposedResult['target-polygon'], null, '\t'));
             console.log('\n-- Check out the results on your browser --\n');
+
+            // DBへ保存
+            await savePlacesToDb(parameter, proposedResults['result-for-db']);
         });
     });
 };
@@ -136,11 +106,14 @@ const executeOnlyProposed = async (io, apiKey) => {
 const executeOnlyBaseline = async (io, apiKey) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-baseline', async (parameter) => {
-            const baselineResult = await executeBaseline(parameter, apiKey);
-            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
+            const baselineResults = await executeBaseline(parameter, apiKey);
+            const baselineResult = baselineResults['result-for-web'];
             io.emit('emit-baseline-result', baselineResult);
-
+            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
             console.log('\n-- Check out the results on your browser --\n');
+
+            // DBへ保存
+            await savePlacesToDb(parameter, baselineResults['result-for-db']);
         });
     });
 };
