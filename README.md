@@ -6,7 +6,8 @@ This branch is for developers.
 
 ## Commands
 ```
-# Normal
+# Normal with starting mongod
+$ sudo service mongod start
 $ npm start
 
 # With nodemon
