@@ -178,7 +178,17 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
         "map": turf.featureCollection(features)
     }
 
-    return result;
+    const dbAllPlaces = [];
+
+    for (const cell of cells) {
+        dbAllPlaces.push(...cell['data']['places']);
+    }
+
+
+    return {
+        "result-for-web": result,
+        "result-for-db": dbAllPlaces
+    };
 };
 
 module.exports = crawlerGrid;

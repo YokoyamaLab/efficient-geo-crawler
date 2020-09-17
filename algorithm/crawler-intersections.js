@@ -1,5 +1,6 @@
 const { Client } = require("@googlemaps/google-maps-services-js");
 const turf = require('@turf/turf');
+const mongoClient = require('mongodb').MongoClient;
 
 const sleep = require(`${__dirname}/../mymodules/sleep.js`);
 
@@ -230,7 +231,17 @@ const crawlerIntersections = async (apiKey, intersections, crawlingArea, placeTy
         "map": turf.featureCollection(featureQueries)
     }
 
-    return result;
+    // DB保存用全プレイスデータ
+    const dbAllPlaces = [];
+
+    for (const doneQuery of doneQueries) {
+        dbAllPlaces.push(...doneQuery['allPlaces']);
+    }
+
+    return {
+        "result-for-web": result,
+        "result-for-db": dbAllPlaces
+    };
 };
 
 module.exports = crawlerIntersections;

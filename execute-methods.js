@@ -44,11 +44,12 @@ exports.executeProposed = async (parameter, apiKey) => {
 
     // 3. Intersection-based Methodを実行
     console.log('-- 3. Execute Proposed Method --');
-    const proposedResult = await crawlerIntersections(apiKey, intersections, targetPolygon, placeType, pagingIsOn);
+    const results = await crawlerIntersections(apiKey, intersections, targetPolygon, placeType, pagingIsOn);
+    const proposedResult = results['result-for-web'];
     proposedResult['target-polygon'] = targetPolygon;
     fs.writeFileSync(`${__dirname}/output/${areaName}/proposed-result.json`, JSON.stringify(proposedResult, null, '\t'));
 
-    return proposedResult;
+    return results;
 };
 
 exports.executeBaseline = async (parameter, apiKey) => {
@@ -75,9 +76,10 @@ exports.executeBaseline = async (parameter, apiKey) => {
 
     // 2. Grid-based Methodを実行 → クライアントに結果を送信
     console.log('-- 2. Execute Baseline Method --');
-    const baselineResult = await crawlerGrid(apiKey, pointGrid, placeType, targetPolygon, cellSide, pagingIsOn);
+    const results = await crawlerGrid(apiKey, pointGrid, placeType, targetPolygon, cellSide, pagingIsOn);
+    const baselineResult = results['result-for-web'];
     baselineResult['target-polygon'] = targetPolygon;
     fs.writeFileSync(`${__dirname}/output/${areaName}/${cellSide}m-baseline-result.json`, JSON.stringify(baselineResult, null, '\t'));
 
-    return baselineResult;
+    return results;
 };

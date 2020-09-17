@@ -69,37 +69,52 @@ const setMap = async (port) => {
 const executeBothMethods = async (io, apiKey) => {
     io.on('connection', (socket) => {
         socket.on('execute-both-methods', async (parameter) => {
-            const proposedResult = await executeProposed(parameter, apiKey);
-            const baselineResult = await executeBaseline(parameter, apiKey);
+            const proposedResults = await executeProposed(parameter, apiKey);
+            const proposedResult = proposedResults['result-for-web'];
             io.emit('emit-proposed-result', proposedResult);
-            io.emit('emit-baseline-result', baselineResult);
 
-            // 保存処理
+            const baselineResults = await executeBaseline(parameter, apiKey);
+            const baselineResult = baselineResults['result-for-web'];
+            io.emit('emit-baseline-result', baselineResult);
             fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
 
+            console.log('\n-- Check out the results on your browser --\n');
+
+            // 両手法で収集した全プレイスデータから固有のプレイスデータだけ抽出する
+            const dbAllPlaces = proposedResults['result-for-db'].concat(baselineResults['result-for-db']);
+            const dbUniquePlaces = dbAllPlaces.filter((element, index, self) =>
+                self.findIndex(e =>
+                    e['place_id'] === element['place_id']
+                ) === index
+            );
+            console.log(`proposed:${proposedResults['result-for-db'].length}`);
+            console.log(`baseline:${baselineResults['result-for-db'].length}`);
+            console.log(`Unique:${dbUniquePlaces.length}`);
+            
             // MongoDB設定
             const dbUrl = 'mongodb://localhost:27017';
             const connectOption = {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
             };
-            const dbName = process.env.DBNAME || 'efficient-geo-crawler-db';
+            const dbName = process.env.DBNAME || 'geo-crawler-db';
 
             // DBへ接続＋保存
             await mongoClient.connect(dbUrl, connectOption, async (err, client) => {
                 if (err) {
                     console.log(err);
                 }
-                await console.log("Connected successfully to server");
+
+                console.log("Connected successfully to server");
                 const db = client.db(dbName);
-                const collection = db.collection(parameter['area-name']);
-                await collection.insertMany([proposedResult, baselineResult]);
-                console.log('Saved to MongoDB');
+                const collection = await db.createCollection(parameter['area-name']);
+                await collection.insertMany(dbUniquePlaces);
+
+                console.log('Saved all places to MongoDB');
+                console.log(`DB Name: ${dbName}`);
+                console.log(`Collection Name: ${parameter['area-name']}`);
                 client.close();
             });
-
-            console.log('\n-- Saved the result in your local and MongoDB --');
-            console.log('-- Check out the results on your browser --\n');
         });
     });
 };
