@@ -26,7 +26,7 @@ const savePlacesToDb = async (parameter, places) => {
             try {
                 await collection.insertOne(place);
             } catch (err) {
-                if (err.code == '11000') {
+                if (err.code === 11000) {
                     dupNumber += 1;
                 }
             }
