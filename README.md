@@ -17,3 +17,4 @@ $ npm run dev
 ## Requirement
 * Node.js: ^12.18.3
 * npm: ^6.14.6
+* MongoDB: ^4.2.9
