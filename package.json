@@ -1,5 +1,5 @@
 {
-  "name": "efficient-crawling-gis",
+  "name": "efficient-geo-crawler",
   "version": "1.0.0",
   "description": "The GIS that specializes in efficient crawling",
   "main": "server.js",
