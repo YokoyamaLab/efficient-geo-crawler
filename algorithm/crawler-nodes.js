@@ -115,6 +115,11 @@ const crawlQueryPoint = async (apiKey, googleClient, queryPoint, crawlingArea, p
 const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, pagingIsOn) => {
     const googleClient = new Client();
 
+    // スコアの平均値を計算
+    let averageScore = (scoredNodes[0]['score'] + scoredNodes[scoredNodes.length - 1]['score']) / 2;
+    averageScore = Math.round(averageScore * 100) / 100;
+    console.log(averageScore);
+
     const doneQueries = [];
     for (let i = 0; i < scoredNodes.length; i++) {
         if (i === 0) { // 最もスコアの大きい交差点
@@ -143,6 +148,16 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
                 sleep(1);
                 const doneQuery = await crawlQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
                 doneQueries.push(doneQuery);
+            }
+
+            // ページング：3ページまでor1ページ目のみ
+            if (scoredNodes[i]['score'] >= averageScore) {
+                pagingIsOn = true;
+                console.log(`Paging: ${pagingIsOn}`);
+            }
+            if (scoredNodes[i]['score'] < averageScore) {
+                pagingIsOn = false;
+                console.log(`Paging: ${pagingIsOn}`);
             }
         }
     }
@@ -204,6 +219,9 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
         // }
     }
 
+    let efficiency = uniqueInPlaces.size / allQueryTimes;
+    efficiency = Math.round(efficiency * 1000) / 1000;
+
     const result = {
         "detail": {
             "Place Type": placeType,
@@ -226,6 +244,7 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
                 "Unique": uniqueOutPlaces.size,
                 "Duplicated": allOutPlaces.length - uniqueOutPlaces.size
             },
+            "Efficiency": efficiency
         },
         "map": turf.featureCollection(featureQueries)
     }
