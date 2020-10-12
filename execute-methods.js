@@ -6,8 +6,8 @@ const createSubdirectory = require(`${__dirname}/mymodules/create-subdirectory.j
 
 // 提案手法
 const crawlRoadMaps = require(`${__dirname}/algorithm/crawl-road-maps`);
-const extractIntersections = require(`${__dirname}/algorithm/extract-intersections`);
-const crawlerIntersections = require(`${__dirname}/algorithm/crawler-intersections`);
+const scoreNodes = require(`${__dirname}/algorithm/score-nodes.js`);
+const crawlerNodes = require(`${__dirname}/algorithm/crawler-nodes`);
 
 // ベースライン手法
 const calcPointGrid = require(`${__dirname}/baseline/point-grid`);
@@ -38,13 +38,13 @@ exports.executeProposed = async (parameter, apiKey) => {
     fs.writeFileSync(`${__dirname}/output/${areaName}/all-road-maps.json`, JSON.stringify(roadMaps, null, '\t'));
 
     // 2. 交差点抽出
-    console.log('-- 2. Extract Intersections --');
-    const intersections = await extractIntersections(roadMaps, targetPolygon);
-    fs.writeFileSync(`${__dirname}/output/${areaName}/intersections.json`, JSON.stringify(intersections, null, '\t'));
+    console.log('-- 2. Score Nodes --');
+    const sortedScoredNodes = await scoreNodes(roadMaps, targetPolygon);
+    fs.writeFileSync(`${__dirname}/output/${areaName}/scored-nodes.json`, JSON.stringify(sortedScoredNodes, null, '\t'));
 
     // 3. Intersection-based Methodを実行
     console.log('-- 3. Execute Proposed Method --');
-    const results = await crawlerIntersections(apiKey, intersections, targetPolygon, placeType, pagingIsOn);
+    const results = await crawlerNodes(apiKey, sortedScoredNodes, targetPolygon, placeType, pagingIsOn);
     const proposedResult = results['result-for-web'];
     proposedResult['target-polygon'] = targetPolygon;
     fs.writeFileSync(`${__dirname}/output/${areaName}/proposed-result.json`, JSON.stringify(proposedResult, null, '\t'));
