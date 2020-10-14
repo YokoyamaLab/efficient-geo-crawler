@@ -3,9 +3,8 @@ const turf = require('@turf/turf');
 
 const sleep = require(`${__dirname}/../mymodules/sleep.js`);
 
-// 1. 単一のクエリ点を用いてクローリングする
-// ※ページングを考慮
-const crawlQueryPoint = async (apiKey, googleClient, queryPoint, crawlingArea, placeType, pagingIsOn) => {
+// 1. 最もスコアの大きいノードをクロールする(ページングあり)
+const crawlFirstQueryPoint = async (apiKey, googleClient, queryPoint, crawlingArea, placeType, pagingIsOn) => {
     const location = [queryPoint.coordinate[1], queryPoint.coordinate[0]]; // lat, lng
 
     const allResults = [];
@@ -111,7 +110,158 @@ const crawlQueryPoint = async (apiKey, googleClient, queryPoint, crawlingArea, p
     return queryPoint;
 };
 
-// 2. intersection-based method本体
+// ページングを制御しつつ，クロールを行う
+const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingArea, placeType, pagingIsOn, doneQueries, thresholdUselessArea) => {
+    const location = [queryPoint.coordinate[1], queryPoint.coordinate[0]]; // lat, lng
+
+    const places = [];
+    const inPlaces = [];
+    const outPlaces = [];
+
+    let queryTimes = 0; // クエリ回数
+    let p = 0; // 割合p
+    let pagetoken; // ページトークン
+    let queryCircle; // このクエリ点に対するクエリ円
+
+    while (p < thresholdUselessArea) {
+        // クエリ1回目(1ページ目)
+        if (queryTimes === 0) {
+            const page = await googleClient.placesNearby({
+                params: {
+                    location,
+                    rankby: 'distance',
+                    type: placeType,
+                    key: apiKey
+                },
+                timeout: 1000
+            }).catch((err) => {
+                console.log(err);
+            });
+            // queryTimes += 1;
+            pagetoken = page['data']['next_page_token'];
+            places.push(...page.data.results);
+            console.log('1st Query!');
+        }
+
+        // クエリ2回目(2ページ目)
+        if (queryTimes === 1) {
+            sleep(3);
+            const page = await googleClient.placesNearby({
+                params: {
+                    pagetoken,
+                    key: apiKey
+                },
+                timeout: 1000
+            }).catch((err) => {
+                console.log(err);
+            });
+            // queryTimes += 1;
+            pagetoken = page['data']['next_page_token'];
+            places.push(...page.data.results);
+            console.log('2nd Query!');
+        }
+
+        // クエリ3回目(3ページ目)
+        if (queryTimes === 2) {
+            sleep(3);
+            const page = await googleClient.placesNearby({
+                params: {
+                    pagetoken,
+                    key: apiKey
+                },
+                timeout: 1000
+            }).catch((err) => {
+                console.log(err);
+            });
+            // queryTimes += 1;
+            places.push(...page.data.results);
+            console.log('3rd Query!');
+        }
+
+        for (const place of places) {
+            // クエリ点とプレイスの距離を計算
+            const placeLocation = [place['geometry']['location']['lng'], place['geometry']['location']['lat']];
+            const distance = turf.distance(queryPoint.coordinate, placeLocation, {
+                units: 'meters'
+            });
+            place['distance'] = distance;
+
+            // プレイスを収集範囲内・外に仕分ける
+            const placeIsIn = turf.booleanPointInPolygon(placeLocation, crawlingArea);
+            if (placeIsIn) {
+                inPlaces.push(place);
+            } else {
+                outPlaces.push(place);
+            }
+        }
+
+        // クエリ円Cnとその面積地Snを計算する
+        places.sort((a, b) => b.distance - a.distance); // 降順(大 → 小)
+        queryCircle = turf.circle(queryPoint.coordinate, places[0]['distance'], {
+            units: 'meters',
+            properties: {
+                name: 'query-circle'
+            }
+        });
+        const areaQueryCircle = turf.area(queryCircle);
+        console.log("Sn: " + areaQueryCircle);
+
+        // クエリ円Cnと収集範囲の共通部分をくり抜く
+        let leftQueryCircle = queryCircle;
+        if (turf.difference(leftQueryCircle, crawlingArea)) {
+            leftQueryCircle = turf.difference(leftQueryCircle, crawlingArea);
+        }
+
+        // 共通部分がない場合はそのまま
+        if (turf.difference(leftQueryCircle, crawlingArea) === null) {
+            leftQueryCircle = queryCircle;
+        }
+
+        // クエリ円Cnからそれ以外のすべてのクエリ円(doneQueries)との共通部分をくり抜く
+        for (const doneQuery of doneQueries) {
+            // 共通部分がない場合はスキップ
+            if (turf.difference(leftQueryCircle, crawlingArea) === null) {
+                continue;
+            }
+
+            leftQueryCircle = turf.difference(leftQueryCircle, doneQuery['queryCircle']);
+        }
+
+        // 残った部分の面積値Slを求める
+        const areaLeftQueryCircle = turf.area(leftQueryCircle);
+        console.log("Sl: " + areaLeftQueryCircle);
+
+        // くり抜いた部分の面積値Suを計算する
+        const uselessArea = areaQueryCircle - areaLeftQueryCircle;
+        console.log("Su: " + uselessArea);
+
+        // 割合p(収集範囲に対する無駄な部分の割合)を計算する
+        p = Math.round((uselessArea / areaLeftQueryCircle));
+        console.log("p: " + p);
+
+        // クエリ回数カウント
+        queryTimes += 1;
+
+        // 終了条件
+        if (p >= thresholdUselessArea) {
+            break;
+        }
+        if (queryTimes === 3) {
+            break;
+        }
+    }
+
+    queryPoint['queryTimes'] = queryTimes;
+    queryPoint['allPlaces'] = places;
+    queryPoint['inPlaces'] = inPlaces;
+    queryPoint['outPlaces'] = outPlaces;
+    queryPoint['queryCircle'] = queryCircle;
+
+    return queryPoint;
+};
+
+
+// 提案手法本体
 const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, pagingIsOn) => {
     const googleClient = new Client();
 
@@ -120,7 +270,7 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
         if (i === 0) { // 最もスコアの大きい交差点
             console.log(`Start with ${scoredNodes[i].id} (score: ${scoredNodes[i].score})`);
 
-            const doneQuery = await crawlQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
+            const doneQuery = await crawlFirstQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
             doneQueries.push(doneQuery);
         } else { // それ以外
             const nextQueryIsOutAllQueryCircles = [];
@@ -141,7 +291,12 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
             if (nextQueryIsOutAllQueryCircles.length === doneQueries.length) {
                 console.log(`Next Query is ${scoredNodes[i].id} (score: ${scoredNodes[i].score})`);
                 sleep(1);
-                const doneQuery = await crawlQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
+
+                // 閾値(%)
+                const thresholdUselessArea = 50;
+                const doneQuery = await crawlOtherQueryPoints(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn, doneQueries, thresholdUselessArea)
+
+                // const doneQuery = await crawlQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
                 doneQueries.push(doneQuery);
             }
         }
