@@ -1,6 +1,8 @@
 const { Client } = require("@googlemaps/google-maps-services-js");
 const turf = require('@turf/turf');
 
+const fs = require('fs');
+
 const sleep = require(`${__dirname}/../mymodules/sleep.js`);
 
 // 1. 最もスコアの大きいノードをクロールする(ページングあり)
@@ -10,7 +12,7 @@ const crawlFirstQueryPoint = async (apiKey, googleClient, queryPoint, crawlingAr
     const allResults = [];
     let queryTimes = 0;
 
-    // 1~20件
+    // 1ページ目
     const firstResults = await googleClient.placesNearby({
         params: {
             location,
@@ -18,7 +20,7 @@ const crawlFirstQueryPoint = async (apiKey, googleClient, queryPoint, crawlingAr
             type: placeType,
             key: apiKey
         },
-        timeout: 1000
+        timeout: 5000
     }).catch((err) => {
         console.log(err);
     });
@@ -32,13 +34,14 @@ const crawlFirstQueryPoint = async (apiKey, googleClient, queryPoint, crawlingAr
     // ページングオンオフの処理
     switch (pagingIsOn) {
         case true:
-            // 21~40件
+            // 2ページ目
             sleep(3);
             const secondResults = await googleClient.placesNearby({
                 params: {
                     pagetoken: firstResults['data']['next_page_token'],
                     key: apiKey
-                }
+                },
+                timeout: 5000
             }).catch((err) => {
                 console.log(err);
             });
@@ -49,13 +52,14 @@ const crawlFirstQueryPoint = async (apiKey, googleClient, queryPoint, crawlingAr
                 console.log('No 3rd Page');
             }
 
-            // 41~60件
+            // 3ページ目
             sleep(3);
             const thirdResults = await googleClient.placesNearby({
                 params: {
                     pagetoken: secondResults['data']['next_page_token'],
                     key: apiKey
-                }
+                },
+                timeout: 5000
             }).catch((err) => {
                 console.log(err);
             });
@@ -110,7 +114,7 @@ const crawlFirstQueryPoint = async (apiKey, googleClient, queryPoint, crawlingAr
     return queryPoint;
 };
 
-// ページングを制御しつつ，クロールを行う
+// ページング制御をしつつ，クロールを行う
 const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingArea, placeType, pagingIsOn, doneQueries, thresholdUselessArea) => {
     const location = [queryPoint.coordinate[1], queryPoint.coordinate[0]]; // lat, lng
 
@@ -123,6 +127,8 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
     let pagetoken; // ページトークン
     let queryCircle; // このクエリ点に対するクエリ円
 
+    const areaName = "1015-paging-test2";
+
     while (p < thresholdUselessArea) {
         // クエリ1回目(1ページ目)
         if (queryTimes === 0) {
@@ -133,11 +139,10 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
                     type: placeType,
                     key: apiKey
                 },
-                timeout: 1000
+                timeout: 5000
             }).catch((err) => {
                 console.log(err);
             });
-            // queryTimes += 1;
             pagetoken = page['data']['next_page_token'];
             places.push(...page.data.results);
             console.log('1st Query!');
@@ -151,14 +156,13 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
                     pagetoken,
                     key: apiKey
                 },
-                timeout: 1000
+                timeout: 5000
             }).catch((err) => {
                 console.log(err);
             });
-            // queryTimes += 1;
             pagetoken = page['data']['next_page_token'];
             places.push(...page.data.results);
-            console.log('2nd Query!');
+            console.log('2nd Query!!');
         }
 
         // クエリ3回目(3ページ目)
@@ -169,15 +173,15 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
                     pagetoken,
                     key: apiKey
                 },
-                timeout: 1000
+                timeout: 5000
             }).catch((err) => {
                 console.log(err);
             });
-            // queryTimes += 1;
             places.push(...page.data.results);
-            console.log('3rd Query!');
+            console.log('3rd Query!!!');
         }
 
+        // ページング制御
         for (const place of places) {
             // クエリ点とプレイスの距離を計算
             const placeLocation = [place['geometry']['location']['lng'], place['geometry']['location']['lat']];
@@ -195,7 +199,7 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
             }
         }
 
-        // クエリ円Cnとその面積地Snを計算する
+        // クエリ円Cnを求める
         places.sort((a, b) => b.distance - a.distance); // 降順(大 → 小)
         queryCircle = turf.circle(queryPoint.coordinate, places[0]['distance'], {
             units: 'meters',
@@ -203,40 +207,54 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
                 name: 'query-circle'
             }
         });
-        const areaQueryCircle = turf.area(queryCircle);
-        console.log("Sn: " + areaQueryCircle);
+        fs.writeFileSync(`${__dirname}/../output/${areaName}/initial-query-circle.json`, JSON.stringify(queryCircle, null, '\t'));
 
-        // クエリ円Cnと収集範囲の共通部分をくり抜く
-        let leftQueryCircle = queryCircle;
-        if (turf.difference(leftQueryCircle, crawlingArea)) {
-            leftQueryCircle = turf.difference(leftQueryCircle, crawlingArea);
-        }
 
-        // 共通部分がない場合はそのまま
-        if (turf.difference(leftQueryCircle, crawlingArea) === null) {
-            leftQueryCircle = queryCircle;
-        }
+        // クエリ円Cnの収集範囲からはみ出ている部分を切り取る(共通部分を抜き出す)
+        const intersectWithCrawlingArea = turf.intersect(queryCircle, crawlingArea);
+        fs.writeFileSync(`${__dirname}/../output/${areaName}/intersect-with-crawling-area.json`, JSON.stringify(intersectWithCrawlingArea, null, '\t'));
 
         // クエリ円Cnからそれ以外のすべてのクエリ円(doneQueries)との共通部分をくり抜く
-        for (const doneQuery of doneQueries) {
-            // 共通部分がない場合はスキップ
-            if (turf.difference(leftQueryCircle, crawlingArea) === null) {
-                continue;
+        let leftQueryCircle;
+        for (let i = 0; i < doneQueries.length; i++) {
+            if (i === 0) {
+                const differenceFromOtherQueryCircle = turf.difference(intersectWithCrawlingArea, doneQueries[i]['queryCircle']);
+                if (differenceFromOtherQueryCircle) {
+                    leftQueryCircle = differenceFromOtherQueryCircle;
+                }
+                // 共通部分がない場合
+                if (differenceFromOtherQueryCircle === null) {
+                    leftQueryCircle = intersectWithCrawlingArea;
+                }
             }
 
-            leftQueryCircle = turf.difference(leftQueryCircle, doneQuery['queryCircle']);
+            if (i !== 0) {
+                const differenceFromOtherQueryCircle = turf.difference(leftQueryCircle, doneQueries[i]['queryCircle']);
+                if (differenceFromOtherQueryCircle) {
+                    leftQueryCircle = differenceFromOtherQueryCircle;
+                }
+                // 共通部分がない場合
+                if (differenceFromOtherQueryCircle === null) {
+                    continue;
+                }
+            }
         }
+        fs.writeFileSync(`${__dirname}/../output/${areaName}/left-query-circle.json`, JSON.stringify(leftQueryCircle, null, '\t'));
 
-        // 残った部分の面積値Slを求める
+        // クエリ円Cnの面積を求める
+        const areaQueryCircle = turf.area(queryCircle);
+        console.log("Query-Circle Area: " + areaQueryCircle);
+
+        // 残った部分の面積Slを求める
         const areaLeftQueryCircle = turf.area(leftQueryCircle);
-        console.log("Sl: " + areaLeftQueryCircle);
+        console.log("Left Area: " + areaLeftQueryCircle);
 
-        // くり抜いた部分の面積値Suを計算する
-        const uselessArea = areaQueryCircle - areaLeftQueryCircle;
-        console.log("Su: " + uselessArea);
+        // くり抜いた部分の面積Suを計算する
+        const areaUseless = areaQueryCircle - areaLeftQueryCircle;
+        console.log("Useless Area: " + areaUseless);
 
         // 割合p(収集範囲に対する無駄な部分の割合)を計算する
-        p = Math.round((uselessArea / areaLeftQueryCircle));
+        p = Math.round((areaUseless / areaLeftQueryCircle) * 10) / 10;
         console.log("p: " + p);
 
         // クエリ回数カウント
@@ -244,9 +262,11 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
 
         // 終了条件
         if (p >= thresholdUselessArea) {
+            console.log('Stop paging...\n');
             break;
         }
         if (queryTimes === 3) {
+            console.log('Finish max paging...\n');
             break;
         }
     }
@@ -289,14 +309,15 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
 
             // 全クエリ円外ならクロールする
             if (nextQueryIsOutAllQueryCircles.length === doneQueries.length) {
-                console.log(`Next Query is ${scoredNodes[i].id} (score: ${scoredNodes[i].score})`);
-                sleep(1);
+                console.log(`\nNext Query is ${scoredNodes[i].id} (score: ${scoredNodes[i].score})`);
 
-                // 閾値(%)
-                const thresholdUselessArea = 50;
+                // ページング制御なし
+                // const doneQuery = await crawlFirstQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
+
+                // ページング制御あり
+                const thresholdUselessArea = 2; // 閾値
                 const doneQuery = await crawlOtherQueryPoints(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn, doneQueries, thresholdUselessArea)
 
-                // const doneQuery = await crawlQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
                 doneQueries.push(doneQuery);
             }
         }
@@ -359,6 +380,10 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
         // }
     }
 
+    // 収集効率Eを計算
+    let efficiency = uniqueInPlaces.size / allQueryTimes;
+    efficiency = Math.round(efficiency * 1000) / 1000;
+
     const result = {
         "detail": {
             "Place Type": placeType,
@@ -366,6 +391,7 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
             "Total Query-Points": scoredNodes.length,
             "Used Query-Points": doneQueries.length,
             "Total Query-Times": allQueryTimes,
+            "Efficiency": efficiency,
             "Total": {
                 "Total": allPlaces.length,
                 "Unique": uniquePlaces.size,
