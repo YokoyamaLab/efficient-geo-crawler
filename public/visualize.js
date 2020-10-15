@@ -118,10 +118,6 @@ resultUploadButton.addEventListener('change', (e) => {
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <th>Place Type</th>
-                                            <td>${detailResult['Place Type']}</td>
-                                        </tr>
-                                        <tr>
                                             <th>Total Query-Points</th>
                                             <td>${detailResult['Total Query-Points']}</td>
                                         </tr>
@@ -132,6 +128,10 @@ resultUploadButton.addEventListener('change', (e) => {
                                         <tr>
                                             <th>Total Query-Times</th>
                                             <td>${detailResult['Total Query-Times']}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Efficiency(E)</th>
+                                            <td>${detailResult['Efficiency']}</td>
                                         </tr>
                                     </tbody>
                                 </table>

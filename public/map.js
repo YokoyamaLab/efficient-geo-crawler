@@ -5,7 +5,9 @@ const socket = io();
 const defaultMapSetting = {
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
-    center: [139.366775, 35.661760],
+    center: [2.298175, 48.871922], // シャンゼリゼ通り周辺
+        // [139.699717, 35.696015], // 歌舞伎町周辺
+        // [139.366775, 35.661760], // 日野キャン周辺
     zoom: 15,
     accessToken: 'pk.eyJ1IjoiaWppbWFzbyIsImEiOiJja2FtMmE1dzMwbGZkMndwaWJjdDMya2lxIn0.xO0kj2WxicRuCv-O8sirtQ'
 };
@@ -205,10 +207,6 @@ proposedToggle.onclick = () => {
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <th>Place Type</th>
-                                            <td>${proposedDetailResult['Place Type']}</td>
-                                        </tr>
-                                        <tr>
                                             <th>Total Query-Points</th>
                                             <td>${proposedDetailResult['Total Query-Points']}</td>
                                         </tr>
@@ -217,8 +215,12 @@ proposedToggle.onclick = () => {
                                             <td>${proposedDetailResult['Used Query-Points']}</td>
                                         </tr>
                                         <tr>
-                                            <th>Total Query-Times</th>
+                                            <th>Total Query-Times(Q)</th>
                                             <td>${proposedDetailResult['Total Query-Times']}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Efficiency(E)</th>
+                                            <td>${proposedDetailResult['Efficiency']}</td>
                                         </tr>
                                     </tbody>
                                 </table>
