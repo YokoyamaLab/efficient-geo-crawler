@@ -115,7 +115,7 @@ const crawlFirstQueryPoint = async (apiKey, googleClient, queryPoint, crawlingAr
 };
 
 // ページング制御をしつつ，クロールを行う
-const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingArea, placeType, pagingIsOn, doneQueries, thresholdUselessArea) => {
+const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingArea, placeType, pagingIsOn, doneQueries, thresholdP) => {
     const location = [queryPoint.coordinate[1], queryPoint.coordinate[0]]; // lat, lng
 
     const places = [];
@@ -127,9 +127,9 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
     let pagetoken; // ページトークン
     let queryCircle; // このクエリ点に対するクエリ円
 
-    const areaName = "1015-paging-test2";
+    const areaName = "1016-kabuki4";
 
-    while (p < thresholdUselessArea) {
+    while (p < thresholdP) {
         // クエリ1回目(1ページ目)
         if (queryTimes === 0) {
             const page = await googleClient.placesNearby({
@@ -211,7 +211,10 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
 
 
         // クエリ円Cnの収集範囲からはみ出ている部分を切り取る(共通部分を抜き出す)
-        const intersectWithCrawlingArea = turf.intersect(queryCircle, crawlingArea);
+        let intersectWithCrawlingArea = turf.intersect(queryCircle, crawlingArea);
+        if (intersectWithCrawlingArea === null) {
+            intersectWithCrawlingArea = queryCircle;
+        }
         fs.writeFileSync(`${__dirname}/../output/${areaName}/intersect-with-crawling-area.json`, JSON.stringify(intersectWithCrawlingArea, null, '\t'));
 
         // クエリ円Cnからそれ以外のすべてのクエリ円(doneQueries)との共通部分をくり抜く
@@ -241,7 +244,7 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
         }
         fs.writeFileSync(`${__dirname}/../output/${areaName}/left-query-circle.json`, JSON.stringify(leftQueryCircle, null, '\t'));
 
-        // クエリ円Cnの面積を求める
+        // クエリ円Cnの面積Snを求める
         const areaQueryCircle = turf.area(queryCircle);
         console.log("Query-Circle Area: " + areaQueryCircle);
 
@@ -261,7 +264,7 @@ const crawlOtherQueryPoints = async (apiKey, googleClient, queryPoint, crawlingA
         queryTimes += 1;
 
         // 終了条件
-        if (p >= thresholdUselessArea) {
+        if (p >= thresholdP) {
             console.log('Stop paging...\n');
             break;
         }
@@ -315,8 +318,8 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
                 // const doneQuery = await crawlFirstQueryPoint(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn);
 
                 // ページング制御あり
-                const thresholdUselessArea = 2; // 閾値
-                const doneQuery = await crawlOtherQueryPoints(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn, doneQueries, thresholdUselessArea)
+                const thresholdP = 1.5; // 閾値
+                const doneQuery = await crawlOtherQueryPoints(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, pagingIsOn, doneQueries, thresholdP)
 
                 doneQueries.push(doneQuery);
             }
