@@ -44,7 +44,7 @@ exports.executeProposed = async (parameter, apiKey) => {
 
     // 3. Intersection-based Methodを実行
     console.log('-- 3. Execute Proposed Method --');
-    const results = await crawlerNodes(apiKey, sortedScoredNodes, targetPolygon, placeType, pagingIsOn);
+    const results = await crawlerNodes(apiKey, sortedScoredNodes, targetPolygon, placeType, pagingIsOn, areaName);
     const proposedResult = results['result-for-web'];
     proposedResult['target-polygon'] = targetPolygon;
     fs.writeFileSync(`${__dirname}/output/${areaName}/proposed-result.json`, JSON.stringify(proposedResult, null, '\t'));
