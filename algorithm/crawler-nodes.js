@@ -74,8 +74,11 @@ const crawlQueryPoints = async (apiKey, googleClient, queryPoint, placeType, pag
 
     // クエリ点と各プレイスの距離を計算する
     for (const result of allResults) {
-        const placeLocation = [result['geometry']['location']['lng'], result['geometry']['location']['lat']];
+        if (place['distance']) {
+            continue;
+        }
 
+        const placeLocation = [result['geometry']['location']['lng'], result['geometry']['location']['lat']];
         const distance = turf.distance(queryPoint.coordinate, placeLocation, {
             units: 'meters'
         });
@@ -162,6 +165,10 @@ const crawlWithPagingMethod = async (apiKey, googleClient, queryPoint, crawlingA
 
         // クエリ点とプレイスの距離を計算
         for (const place of places) {
+            if (place['distance']) {
+                continue;
+            }
+
             const placeLocation = [place['geometry']['location']['lng'], place['geometry']['location']['lat']];
             const distance = turf.distance(queryPoint.coordinate, placeLocation, {
                 units: 'meters'
@@ -288,7 +295,7 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
 
                 // ページング制御あり
                 const thresholdP = 1.5; // 閾値
-                const doneQuery = await crawlWithPagingMethod(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, areaName, doneQueries, thresholdP)
+                const doneQuery = await crawlWithPagingMethod(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, areaName, doneQueries, thresholdP);
 
                 doneQueries.push(doneQuery);
             }
