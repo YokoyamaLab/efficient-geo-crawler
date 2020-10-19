@@ -50,7 +50,15 @@ methodType.addEventListener('change', () => {
 const crawlButton = document.getElementById('crawl-button');
 crawlButton.addEventListener('click', () => {
     // パラメータ設定
-    const polygon = draw.getAll();
+    let polygon
+    // 一度使ったエリアを再利用
+    if (uploadArea) {
+        polygon = turf.featureCollection([uploadArea]);
+    }
+    // 描画ツールで指定
+    if (draw.getAll()['features'].length !== 0) {
+        polygon = draw.getAll();
+    }
     const methodType = document.getElementById('method-select').value;
     const areaName = document.getElementById('area-name').value;
     const placeType = document.getElementById('place-type').value;
@@ -61,10 +69,6 @@ crawlButton.addEventListener('click', () => {
     }
 
     // 未入力チェック
-    if (polygon['features'].length === 0) {
-        alert('Set target polygon.');
-        return;
-    }
     if (!areaName || areaName === '/') {
         alert('Set valid area name.');
         return;

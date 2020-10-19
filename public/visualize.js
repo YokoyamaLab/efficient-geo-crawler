@@ -1,7 +1,7 @@
 // 収集結果ファイルアップロード → 可視化
 const reader = new FileReader();
-const resultUploadButton = document.getElementById('result-upload');
 
+const resultUploadButton = document.getElementById('result-upload');
 resultUploadButton.addEventListener('change', (e) => {
     if (map.getLayer('query-circles-fill')) {
         map.removeLayer('query-circles-fill');
@@ -260,4 +260,44 @@ map.on('mouseenter', 'query-points', () => {
 // 離れたら，カーソルを元に戻す
 map.on('mouseleave', 'query-points', () => {
     map.getCanvas().style.cursor = '';
+});
+
+// 収集範囲読み込み → 可視化
+let uploadArea;
+const areaUploadButton = document.getElementById('area-upload');
+areaUploadButton.addEventListener('change', (e) => {
+    if (map.getLayer('target-area-outline')) {
+        map.removeLayer('target-area-outline');
+    }
+    if (map.getSource('load-area')) {
+        map.removeSource('load-area');
+    }
+
+    const file = e.target.files[0];
+    reader.readAsText(file);
+    reader.onload = () => {
+        uploadArea = JSON.parse(reader.result);
+
+        // データ読み込み
+        map.addSource('load-area', {
+            'type': 'geojson',
+            'data': uploadArea
+        });
+
+        // 描画
+        map.addLayer({
+            'id': 'target-area-outline',
+            'type': 'line',
+            'source': 'load-area',
+            'paint': {
+                'line-color': '#03A9F4',
+                'line-width': 3
+            }
+        });
+
+        // 結果に合わせて地図をパンする
+        const centerOfTargetPolygon = turf.center(uploadArea)['geometry']['coordinates'];
+        centerOfTargetPolygon[0] -= 0.004;
+        map.panTo(centerOfTargetPolygon);
+    }
 });
