@@ -17,7 +17,7 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
         const places = [];
         const queryPoint = cell['geometry']['coordinates'] // lng, lat
 
-        // 1~20件
+        // 1ページ目
         const firstResult = await googleClient.placesNearby({
             params: {
                 location: [queryPoint[1], queryPoint[0]],
@@ -25,7 +25,7 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
                 type: placeType,
                 key: apiKey
             },
-            timeout: 1000
+            timeout: 5000
         }).catch((err) => {
             console.log(err);
         });
@@ -39,14 +39,14 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
 
         switch (pagingIsOn) {
             case true:
-                // 21~40件
+                // 2ページ目
                 sleep(3);
                 const secondResult = await googleClient.placesNearby({
                     params: {
                         pagetoken: firstResult['data']['next_page_token'],
                         key: apiKey
                     },
-                    timeout: 1000
+                    timeout: 5000
                 }).catch((err) => {
                     console.log(err);
                 });
@@ -58,14 +58,14 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
                     continue;
                 }
 
-                // 41~60件
+                // 3ページ目
                 sleep(3);
                 const thirdResult = await googleClient.placesNearby({
                     params: {
                         pagetoken: secondResult['data']['next_page_token'],
                         key: apiKey
                     },
-                    timeout: 1000
+                    timeout: 5000
                 }).catch((err) => {
                     console.log(err);
                 });
@@ -78,27 +78,20 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
                 break;
         }
 
-        // クエリ点との距離計算・プレイスデータの内包判定
-        const inPlaces = [];
-        const outPlaces = [];
+        // クエリ点と各プレイスの距離計算
         for (let place of places) {
+            if (place['distance']) {
+                continue;
+            }
+
             const placeLocation = [place['geometry']['location']['lng'], place['geometry']['location']['lat']];
             const distance = turf.distance(queryPoint, placeLocation, {
                 units: 'meters'
             });
             place['distance'] = distance;
-
-            const placeIsIn = turf.booleanPointInPolygon(placeLocation, crawlingArea);
-            if (placeIsIn) {
-                inPlaces.push(place);
-            } else {
-                outPlaces.push(place);
-            }
         }
 
         places.sort((a, b) => b.distance - a.distance); // 降順(大 → 小)
-        inPlaces.sort((a, b) => b.distance - a.distance);
-        outPlaces.sort((a, b) => b.distance - a.distance);
 
         // クエリ円計算
         const queryCircle = turf.circle(queryPoint, places[0]['distance'], {
@@ -111,8 +104,6 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
         cell['data'] = {};
         cell['data']['query-times'] = queryTimes;
         cell['data']['places'] = places;
-        cell['data']['in-places'] = inPlaces;
-        cell['data']['out-places'] = outPlaces;
         cell['data']['query-circle'] = queryCircle;
     }
     console.log('All Cells Cleared');
@@ -127,12 +118,16 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
         totalQueryTimes += cell['data']['query-times'];
         cell['data']['places'].forEach((place) => {
             totalPlaces.push(place['place_id']);
-        });
-        cell['data']['in-places'].forEach((place) => {
-            totalInPlaces.push(place['place_id']);
-        });
-        cell['data']['out-places'].forEach((place) => {
-            totalOutPlaces.push(place['place_id']);
+
+            // プレイスを収集範囲内・外に仕分ける
+            const placeLocation = [place['geometry']['location']['lng'], place['geometry']['location']['lat']];
+            const placeIsIn = turf.booleanPointInPolygon(placeLocation, crawlingArea);
+            if (placeIsIn) {
+                totalInPlaces.push(place['place_id']);
+            }
+            if (!placeIsIn) {
+                totalOutPlaces.push(place['place_id']);
+            }
         });
     }
 
@@ -152,6 +147,10 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
         features.push(cell['data']['query-circle']);
     }
 
+    // 収集効率Eを計算
+    let efficiency = uniqueInPlaces.size / totalQueryTimes;
+    efficiency = Math.round(efficiency * 1000) / 1000;
+
     const result = {
         "detail": {
             "Place Type": placeType,
@@ -159,6 +158,7 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
             "Cell Size": `${cellSide}m`,
             "Total Cells": cells.length,
             "Total Query-Times": totalQueryTimes,
+            "Efficiency": efficiency,
             "Total": {
                 "Total": totalPlaces.length,
                 "Unique": uniquePlaces.size,
