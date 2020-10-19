@@ -340,10 +340,6 @@ baselineToggle.onclick = () => {
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <th>Place Type</th>
-                                            <td>${baselineDetailResult['Place Type']}</td>
-                                        </tr>
-                                        <tr>
                                             <th>Cell Size</th>
                                             <td>${baselineDetailResult['Cell Size']}</td>
                                         </tr>
@@ -354,6 +350,10 @@ baselineToggle.onclick = () => {
                                         <tr>
                                             <th>Total Query-Times</th>
                                             <td>${baselineDetailResult['Total Query-Times']}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Efficiency(E)</th>
+                                            <td>${baselineDetailResult['Efficiency']}</td>
                                         </tr>
                                     </tbody>
                                 </table>
