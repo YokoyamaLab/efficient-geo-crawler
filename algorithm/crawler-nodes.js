@@ -369,7 +369,9 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
     const result = {
         "detail": {
             "Place Type": placeType,
-            "Is Paging": pagingIsOn,
+            "Paging": pagingIsOn,
+            "Paging Method": pagingMethodIsOn,
+            "Threshold P": thresholdP,
             "Total Query-Points": scoredNodes.length,
             "Used Query-Points": doneQueries.length,
             "Total Query-Times": allQueryTimes,
