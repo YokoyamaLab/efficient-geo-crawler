@@ -16,8 +16,6 @@ const crawlerGrid = require(`${__dirname}/baseline/crawler-grid`);
 
 exports.executeProposed = async (parameter, apiKey) => {
     console.log('-- Proposed Method --');
-    console.log(parameter);
-
     // ユーザ側から得られたパラメータ
     const coordinates = parameter['polygon']['features'][0]['geometry']['coordinates'];
     const placeType = parameter['place-type'];

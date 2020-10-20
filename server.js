@@ -68,6 +68,7 @@ const setMap = async (port) => {
 const executeOnlyProposed = async (io, apiKey) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-proposed', async (parameter) => {
+            console.log(parameter);
             const proposedResults = await executeProposed(parameter, apiKey);
             const proposedResult = proposedResults['result-for-web'];
             io.emit('emit-proposed-result', proposedResult);
@@ -84,6 +85,7 @@ const executeOnlyProposed = async (io, apiKey) => {
 const executeOnlyBaseline = async (io, apiKey) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-baseline', async (parameter) => {
+            console.log(parameter);
             const baselineResults = await executeBaseline(parameter, apiKey);
             const baselineResult = baselineResults['result-for-web'];
             io.emit('emit-baseline-result', baselineResult);
