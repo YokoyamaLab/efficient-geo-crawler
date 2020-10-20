@@ -64,29 +64,7 @@ const setMap = async (port) => {
     return { server, io };
 };
 
-
-// 2.1 両手法(proposed, baseline)を実行する
-const executeBothMethods = async (io, apiKey) => {
-    io.on('connection', (socket) => {
-        socket.on('execute-both-methods', async (parameter) => {
-            const proposedResults = await executeProposed(parameter, apiKey);
-            const proposedResult = proposedResults['result-for-web'];
-            io.emit('emit-proposed-result', proposedResult);
-
-            const baselineResults = await executeBaseline(parameter, apiKey);
-            const baselineResult = baselineResults['result-for-web'];
-            io.emit('emit-baseline-result', baselineResult);
-            fs.writeFileSync(`${__dirname}/output/${parameter['area-name']}/target-polygon.json`, JSON.stringify(baselineResult['target-polygon'], null, '\t'));
-            console.log('\n-- Check out the results on your browser --\n');
-
-            // DBへ保存
-            const dbAllPlaces = proposedResults['result-for-db'].concat(baselineResults['result-for-db']);
-            await savePlacesToDb(parameter, dbAllPlaces);
-        });
-    });
-};
-
-// 2.2 提案手法だけ実行する
+// 2.1 提案手法のみ実行する
 const executeOnlyProposed = async (io, apiKey) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-proposed', async (parameter) => {
@@ -102,7 +80,7 @@ const executeOnlyProposed = async (io, apiKey) => {
     });
 };
 
-// 2.3 ベースライン手法だけ実行する
+// 2.2 ベースライン手法のみ実行する
 const executeOnlyBaseline = async (io, apiKey) => {
     io.on('connection', (socket) => {
         socket.on('execute-only-baseline', async (parameter) => {
@@ -124,7 +102,6 @@ const main = async (port) => {
 
     // Google Places APIのAPIキー
     const apiKey = process.env.APIKEY;
-    executeBothMethods(io, apiKey);
     executeOnlyProposed(io, apiKey);
     executeOnlyBaseline(io, apiKey);
 };

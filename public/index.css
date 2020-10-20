@@ -10,10 +10,19 @@ html, body {
 }
 
 .level {
+    width: 100%;
     position: fixed;
     top: 0;
     background-color: #fff;
     padding: 10px;
+}
+
+#threshold-p {
+    width: 80px;
+}
+
+#cell-size {
+    width: 120px;
 }
 
 .parameters {

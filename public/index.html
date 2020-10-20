@@ -50,11 +50,26 @@
                 <div class="level-item">
                     <div class="select is-success">
                         <select id="method-select">
-                            <option value="both" selected>Both Methods</option>
-                            <option value="proposed">Only Proposed</option>
-                            <option value="baseline">Only Baseline</option>
-                        </select>
+                            <option value="paging-proposed" selected>Paging Proposed</option>
+                            <option value="paging-baseline">Paging Baseline</option>
+                            <option value="proposed">Proposed</option>
+                            <option value="baseline">Baseline</option>
+                            </select>
                     </div>
+                </div>
+                <!-- ページングアルゴリズムの有無選択 -->
+                <div class="level-item">
+                    <input id="paging-method-switch" type="checkbox" name="paging-method-switch" class="switch is-success is-rounded"
+                        checked="checked">
+                    <label for="paging-method-switch">Paging Method</label>
+                </div>
+                <!-- 閾値P -->
+                <div class="level-item">
+                    <input id="threshold-p" class="input is-rounded is-success parameters" type="text" placeholder="P">
+                </div>
+                <!-- セルサイズ -->
+                <div class="level-item">
+                    <input id="cell-size" class="input is-rounded is-success parameters" type="text" placeholder="Cell Size(m)" disabled>
                 </div>
                 <!-- エリア名(サブディレクトリ名) -->
                 <div class="level-item">
@@ -63,16 +78,6 @@
                 <!-- プレイスタイプ -->
                 <div class="level-item">
                     <input id="place-type" class="input is-rounded is-success parameters" type="text" value="restaurant" placeholder="Place Type">
-                </div>
-                <!-- セルサイズ -->
-                <div class="level-item">
-                    <input id="cell-size" class="input is-rounded is-success parameters" type="text" placeholder="Cell Size(m)">
-                </div>
-                <!-- ページング選択 -->
-                <div class="level-item">
-                    <input id="paging-switch" type="checkbox" name="paging-switch" class="switch is-success is-rounded"
-                        checked="checked">
-                    <label for="paging-switch">Paging</label>
                 </div>
                 <!-- クローリング実行 -->
                 <div class="level-item">

@@ -6,8 +6,8 @@ const defaultMapSetting = {
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
     center: [2.298175, 48.871922], // シャンゼリゼ通り周辺
-        // [139.699717, 35.696015], // 歌舞伎町周辺
-        // [139.366775, 35.661760], // 日野キャン周辺
+    // [139.699717, 35.696015], // 歌舞伎町周辺
+    // [139.366775, 35.661760], // 日野キャン周辺
     zoom: 15,
     accessToken: 'pk.eyJ1IjoiaWppbWFzbyIsImEiOiJja2FtMmE1dzMwbGZkMndwaWJjdDMya2lxIn0.xO0kj2WxicRuCv-O8sirtQ'
 };
@@ -33,16 +33,53 @@ const geocoder = new MapboxGeocoder({
 map.addControl(geocoder);
 map.addControl(draw);
 
-// セルサイズインプットチェッカー
+// メソッドの種類でフォームを無効化する
 const methodType = document.getElementById('method-select');
 methodType.addEventListener('change', () => {
+    const pagingMethodSwitch = document.getElementById('paging-method-switch');
+    const thresholdPInput = document.getElementById('threshold-p');
     const cellSizeInput = document.getElementById('cell-size');
 
+    // ページングメソッドスイッチ・閾値Pチェック
+    if (pagingMethodSwitch.disabled === true) {
+        pagingMethodSwitch.disabled = false;
+    }
+    if (thresholdPInput.disabled === true) {
+        thresholdPInput.disabled = false;
+    }
+
+    if (methodType.value === 'proposed') {
+        pagingMethodSwitch.disabled = true;
+        thresholdPInput.disabled = true;
+    }
+    if (methodType.value === 'paging-baseline') {
+        pagingMethodSwitch.disabled = true;
+        thresholdPInput.disabled = true;
+    }
+    if (methodType.value === 'baseline') {
+        pagingMethodSwitch.disabled = true;
+        thresholdPInput.disabled = true;
+    }
+
+    // セルサイズチェック
     if (cellSizeInput.disabled = true) {
         cellSizeInput.disabled = false;
     }
-    if (methodType.value === 'proposed') {
+    if (methodType.value === 'paging-proposed' || methodType.value === 'proposed') {
         cellSizeInput.disabled = true;
+    }
+});
+
+// メソッドタイプ: paging-proposed, ページングメソッドスイッチ: false → 閾値Pフォームを無効にする
+const pagingMethodSwitch = document.getElementById('paging-method-switch');
+pagingMethodSwitch.addEventListener('click', () => {
+    const thresholdPInput = document.getElementById('threshold-p');
+
+    if (pagingMethodSwitch.checked === false) {
+        thresholdPInput.disabled = true;
+    }
+    if (pagingMethodSwitch.checked === true) {
+        thresholdPInput.disabled = false;
     }
 });
 
@@ -62,9 +99,18 @@ crawlButton.addEventListener('click', () => {
     const methodType = document.getElementById('method-select').value;
     const areaName = document.getElementById('area-name').value;
     const placeType = document.getElementById('place-type').value;
-    const pagingIsOn = document.getElementById('paging-switch').checked;
+
+    // ページングの有無
+    let pagingIsOn;
+    if (methodType === 'paging-proposed' || methodType === 'paging-baseline') {
+        pagingIsOn = true;
+    } else {
+        pagingIsOn = false;
+    }
+
+    // セルサイズ
     let cellSize;
-    if (methodType === 'both' || methodType === 'baseline') {
+    if (methodType === 'paging-baseline' || methodType === 'baseline') {
         cellSize = document.getElementById('cell-size').value;
     }
 
@@ -77,7 +123,7 @@ crawlButton.addEventListener('click', () => {
         alert('Set place type.');
         return;
     }
-    if (!cellSize && methodType !== 'proposed') {
+    if (!cellSize && methodType !== 'paging-proposed' && methodType !== 'proposed' ) {
         alert('Set cell size.');
         return;
     }
@@ -89,9 +135,21 @@ crawlButton.addEventListener('click', () => {
         "paging-is-on": pagingIsOn,
     };
     switch (methodType) {
-        case 'both':
+        case 'paging-proposed':
+            // ページングアルゴリズムの有無
+            const pagingMethodIsOn = document.getElementById('paging-method-switch').checked;
+            parameter['paging-method-is-on'] = pagingMethodIsOn
+
+            // ページングアルゴリズムオン → 閾値Pを付与
+            if (pagingMethodIsOn) {
+                const thresholdP = document.getElementById('threshold-p').value;
+                parameter['threshold-p'] = thresholdP;
+            }
+            socket.emit('execute-only-proposed', parameter);
+            break;
+        case 'paging-baseline':
             parameter["cell-size"] = cellSize;
-            socket.emit('execute-both-methods', parameter);
+            socket.emit('execute-only-baseline', parameter);
             break;
         case 'proposed':
             socket.emit('execute-only-proposed', parameter);
@@ -138,7 +196,7 @@ socket.on('emit-proposed-result', (output) => {
     });
 
     const methodType = document.getElementById('method-select').value;
-    if (methodType === 'proposed') {
+    if (methodType === 'paging-proposed' || methodType === 'proposed') {
         crawlButton.classList.remove('is-loading');
     }
 });
@@ -174,7 +232,7 @@ socket.on('emit-baseline-result', (output) => {
     });
 
     const methodType = document.getElementById('method-select').value;
-    if (methodType === 'both' || methodType === 'baseline') {
+    if (methodType === 'paging-baseline' || methodType === 'baseline') {
         crawlButton.classList.remove('is-loading');
     }
 });

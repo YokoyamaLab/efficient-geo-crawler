@@ -74,10 +74,6 @@ const crawlQueryPoints = async (apiKey, googleClient, queryPoint, placeType, pag
 
     // クエリ点と各プレイスの距離を計算する
     for (const result of allResults) {
-        if (place['distance']) {
-            continue;
-        }
-
         const placeLocation = [result['geometry']['location']['lng'], result['geometry']['location']['lat']];
         const distance = turf.distance(queryPoint.coordinate, placeLocation, {
             units: 'meters'
@@ -261,7 +257,7 @@ const crawlWithPagingMethod = async (apiKey, googleClient, queryPoint, crawlingA
 // 3. 提案手法本体
 // スコアの大きいノードからクエリを打つ
 // 既に収集したクエリ円内に存在するノードはスキップする
-const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, pagingIsOn, areaName) => {
+const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, pagingIsOn, areaName, pagingMethodIsOn, thresholdP) => {
     const googleClient = new Client();
 
     const doneQueries = [];
@@ -290,13 +286,16 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
             if (nextQueryIsOutAllQueryCircles.length === doneQueries.length) {
                 console.log(`\nNext Query is ${scoredNodes[i].id} (score: ${scoredNodes[i].score})`);
 
-                // ページング制御なし
-                // const doneQuery = await crawlQueryPoints(apiKey, googleClient, scoredNodes[i], placeType, pagingIsOn);
-
-                // ページング制御あり
-                const thresholdP = 1.5; // 閾値
-                const doneQuery = await crawlWithPagingMethod(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, areaName, doneQueries, thresholdP);
-
+                // ページングメソッド
+                let doneQuery;
+                switch (pagingMethodIsOn) {
+                    case true:
+                        doneQuery = await crawlWithPagingMethod(apiKey, googleClient, scoredNodes[i], crawlingArea, placeType, areaName, doneQueries, thresholdP);
+                        break;
+                    case false:
+                        doneQuery = await crawlQueryPoints(apiKey, googleClient, scoredNodes[i], placeType, pagingIsOn);
+                        break;
+                }
                 doneQueries.push(doneQuery);
             }
         }

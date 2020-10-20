@@ -16,12 +16,17 @@ const crawlerGrid = require(`${__dirname}/baseline/crawler-grid`);
 
 exports.executeProposed = async (parameter, apiKey) => {
     console.log('-- Proposed Method --');
+    console.log(parameter);
 
     // ユーザ側から得られたパラメータ
     const coordinates = parameter['polygon']['features'][0]['geometry']['coordinates'];
     const placeType = parameter['place-type'];
     const areaName = parameter['area-name'];
     const pagingIsOn = parameter['paging-is-on'];
+
+    // ページングメソッドのパラメータ
+    const pagingMethodIsOn = parameter['paging-method-is-on'];
+    const thresholdP = Number(parameter['threshold-p']);
 
     // 結果を保存するoutput直下のサブディレクトリを準備
     createSubdirectory(areaName);
@@ -44,7 +49,7 @@ exports.executeProposed = async (parameter, apiKey) => {
 
     // 3. Intersection-based Methodを実行
     console.log('-- 3. Execute Proposed Method --');
-    const results = await crawlerNodes(apiKey, sortedScoredNodes, targetPolygon, placeType, pagingIsOn, areaName);
+    const results = await crawlerNodes(apiKey, sortedScoredNodes, targetPolygon, placeType, pagingIsOn, areaName, pagingMethodIsOn, thresholdP);
     const proposedResult = results['result-for-web'];
     proposedResult['target-polygon'] = targetPolygon;
     fs.writeFileSync(`${__dirname}/output/${areaName}/proposed-result.json`, JSON.stringify(proposedResult, null, '\t'));
