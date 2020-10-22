@@ -253,6 +253,116 @@ const crawlWithPagingMethod = async (apiKey, googleClient, queryPoint, crawlingA
     return queryPoint;
 };
 
+// 未収集エリアをクローリング
+const crawlCrumbAreas = async (apiKey, googleClient, queryPoint, crumbArea, placeType) => {
+    const location = [queryPoint['coordinate'][1], queryPoint['coordinate'][0]]; // lat, lng
+
+    const places = [];
+
+    let isContainCrumbArea = false; // 未収集エリアがクエリ円に完全に含まれているかどうか(boolean)
+    let queryTimes = 0; // クエリ回数
+    let pagetoken; // ページトークン
+    let queryCircle; // このクエリ点に対するクエリ円
+
+    while (!isContainCrumbArea) {
+        // クエリ1回目(1ページ目)
+        if (queryTimes === 0) {
+            const page = await googleClient.placesNearby({
+                params: {
+                    location,
+                    rankby: 'distance',
+                    type: placeType,
+                    key: apiKey
+                },
+                timeout: 5000
+            }).catch((err) => {
+                console.log(err);
+            });
+            pagetoken = page['data']['next_page_token'];
+            places.push(...page.data.results);
+            console.log('1st Query!');
+        }
+
+        // クエリ2回目(2ページ目)
+        if (queryTimes === 1) {
+            sleep(3);
+            const page = await googleClient.placesNearby({
+                params: {
+                    pagetoken,
+                    key: apiKey
+                },
+                timeout: 5000
+            }).catch((err) => {
+                console.log(err);
+            });
+            pagetoken = page['data']['next_page_token'];
+            places.push(...page.data.results);
+            console.log('2nd Query!!');
+        }
+
+        // クエリ3回目(3ページ目)
+        if (queryTimes === 2) {
+            sleep(3);
+            const page = await googleClient.placesNearby({
+                params: {
+                    pagetoken,
+                    key: apiKey
+                },
+                timeout: 5000
+            }).catch((err) => {
+                console.log(err);
+            });
+            places.push(...page.data.results);
+            console.log('3rd Query!!!');
+        }
+
+        // クエリ点とプレイスの距離を計算
+        for (const place of places) {
+            if (place['distance']) {
+                continue;
+            }
+
+            const placeLocation = [place['geometry']['location']['lng'], place['geometry']['location']['lat']];
+            const distance = turf.distance(queryPoint.coordinate, placeLocation, {
+                units: 'meters'
+            });
+            place['distance'] = distance;
+        }
+
+        // クエリ円Cnを求める
+        places.sort((a, b) => b.distance - a.distance); // 降順(大 → 小)
+        queryCircle = turf.circle(queryPoint.coordinate, places[0]['distance'], {
+            units: 'meters',
+            properties: {
+                name: 'query-circle'
+            }
+        });
+
+        // クエリ円と未収集エリアの内包判定
+        isContainCrumbArea = turf.booleanContains(queryCircle, crumbArea);
+
+        // クエリ回数をカウント
+        queryTimes += 1;
+
+        // 終了条件
+        if (isContainCrumbArea) {
+            console.log('This Crumb Area is picked...');
+            break;
+        }
+        if (queryTimes === 3) {
+            console.log('Finish max paging...');
+            break;
+        }
+    }
+
+    queryPoint['queryTimes'] = queryTimes;
+    queryPoint['allPlaces'] = places;
+    queryPoint['queryCircle'] = queryCircle;
+
+    return queryPoint;
+};
+
+
 
 // 3. 提案手法本体
 // スコアの大きいノードからクエリを打つ
@@ -298,6 +408,43 @@ const crawlerNodes = async (apiKey, scoredNodes, crawlingArea, placeType, paging
                 }
                 doneQueries.push(doneQuery);
             }
+        }
+    }
+    console.log('Finish all nodes...\n');
+
+    // 未収集エリアを計算する
+    let leftCrawlingArea = crawlingArea;
+    while (leftCrawlingArea) {
+        for (const doneQuery of doneQueries) {
+            leftCrawlingArea = turf.difference(leftCrawlingArea, doneQuery['queryCircle']);
+        }
+        if (leftCrawlingArea === null) {
+            console.log('All crumb areas are picked!');
+            break;
+        }
+        leftCrawlingArea['properties']['name'] = 'crumb-areas';
+        fs.writeFileSync(`${__dirname}/../output/${areaName}/crumb-areas.json`, JSON.stringify(leftCrawlingArea, null, '\t'));
+
+        const crumbAreas = [];
+        // MultiPolygonの場合 → Polygonに分解する
+        if (leftCrawlingArea['geometry']['type'] === 'MultiPolygon') {
+            const coordinates = leftCrawlingArea['geometry']['coordinates'];
+
+            for (const coordinate of coordinates) {
+                const crumbArea = turf.polygon(coordinate);
+                crumbAreas.push(crumbArea);
+            }
+        }
+
+        // 未収集エリアをクローリングする
+        for (const crumbArea of crumbAreas) {
+            // 中心座標(GeoJSON-Point型)を計算
+            const centerPointOfCrumbArea = {
+                "coordinate": turf.centerOfMass(crumbArea)['geometry']['coordinates']
+            }
+            console.log(centerPointOfCrumbArea);
+            const doneQuery = await crawlCrumbAreas(apiKey, googleClient, centerPointOfCrumbArea, crumbArea, placeType);
+            doneQueries.push(doneQuery);
         }
     }
 
