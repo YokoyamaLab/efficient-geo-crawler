@@ -5,9 +5,10 @@ const socket = io();
 const defaultMapSetting = {
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
-    center: [2.298175, 48.871922], // シャンゼリゼ通り周辺
+    center:
+        // [2.298175, 48.871922], // シャンゼリゼ通り周辺
     // [139.699717, 35.696015], // 歌舞伎町周辺
-    // [139.366775, 35.661760], // 日野キャン周辺
+    [139.366775, 35.661760], // 日野キャン周辺
     zoom: 15,
     accessToken: 'pk.eyJ1IjoiaWppbWFzbyIsImEiOiJja2FtMmE1dzMwbGZkMndwaWJjdDMya2lxIn0.xO0kj2WxicRuCv-O8sirtQ'
 };

@@ -25,7 +25,7 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
                 type: placeType,
                 key: apiKey
             },
-            timeout: 5000
+            timeout: 10000
         }).catch((err) => {
             console.log(err);
         });
@@ -46,7 +46,7 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
                         pagetoken: firstResult['data']['next_page_token'],
                         key: apiKey
                     },
-                    timeout: 5000
+                    timeout: 10000
                 }).catch((err) => {
                     console.log(err);
                 });
@@ -65,7 +65,7 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
                         pagetoken: secondResult['data']['next_page_token'],
                         key: apiKey
                     },
-                    timeout: 5000
+                    timeout: 10000
                 }).catch((err) => {
                     console.log(err);
                 });
@@ -176,7 +176,7 @@ const crawlerGrid = async (apiKey, grid, placeType, crawlingArea, cellSide, pagi
             }
         },
         "map": turf.featureCollection(features)
-    }
+    };
 
     const dbAllPlaces = [];
 

@@ -76,6 +76,8 @@ exports.executeBaseline = async (parameter, apiKey) => {
     console.log('-- 1. Calculate Grid --');
     const targetBbox = calcBbox(coordinates[0], "turf");
     const pointGrid = calcPointGrid(targetBbox, cellSide, targetPolygon);
+    console.log(`Cell Number: ${pointGrid['features'].length}`);
+    console.log(`Total Query Times (On Paging): ${(pointGrid['features'].length) * 3}\n`);
 
     // 2. Grid-based Methodを実行 → クライアントに結果を送信
     console.log('-- 2. Execute Baseline Method --');

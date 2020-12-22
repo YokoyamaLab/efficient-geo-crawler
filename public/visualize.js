@@ -12,8 +12,11 @@ resultUploadButton.addEventListener('change', (e) => {
     if (map.getLayer('target-polygon')) {
         map.removeLayer('target-polygon');
     }
-    if (map.getLayer('query-points')) {
-        map.removeLayer('query-points');
+    if (map.getLayer('node-query')) {
+        map.removeLayer('node-query');
+    }
+    if (map.getLayer('unsearch-query')) {
+        map.removeLayer('unsearch-query');
     }
     if (map.getSource('load-result')) {
         map.removeSource('load-result');
@@ -84,16 +87,37 @@ resultUploadButton.addEventListener('change', (e) => {
             },
             'filter': ['==', '$type', 'Polygon']
         });
+        // ノードクエリ
         map.addLayer({
-            'id': 'query-points',
+            'id': 'node-query',
             'type': 'circle',
             'source': 'load-result',
             'paint': {
-                'circle-color': '#00c300',
+                'circle-color': '#81C784',
                 'circle-radius': 5
             },
-            'filter': ['==', '$type', 'Point']
+            'filter': [
+                "all",
+                ['==', '$type', 'Point'],
+                ['has', 'id']
+            ]
         });
+        // 未収集クエリ
+        map.addLayer({
+            'id': 'unsearch-query',
+            'type': 'circle',
+            'source': 'load-result',
+            'paint': {
+                'circle-color': '#673AB7',
+                'circle-radius': 5
+            },
+            'filter': [
+                "all",
+                ['==', '$type', 'Point'],
+                ['!has', 'id']
+            ]
+        });
+
 
         // クエリ点にマーカー設置
         // プレゼン資料用
