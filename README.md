@@ -1,12 +1,14 @@
 # Efficient Geo Crawler
-This app is a GIS to crawl nearby place data in a target area with [Google Places API](https://cloud.google.com/maps-platform/places) and visualize them quickly. You can crawl place data with Intersection-based Method (Proposed Method) and Grid-based Method (Baseline Method), and then compare their efficiency.
+This web app is to crawl nearby place data in a target area with [Google Places API](https://cloud.google.com/maps-platform/places) and visualize them quickly. You can crawl place data with Road-based Method (Proposed Method) and Grid-based Method (Baseline Method), and then compare their efficiency.<br>
+The proposed method updated. Please check [dev branch](https://github.com/YokoyamaLab/efficient-geo-crawler/tree/dev) to new version.
+
 
 ## Demo
 [Sample is Here.](https://efficient-geo-crawler.herokuapp.com/)
 ![demo-gif](./demo/demo.gif)
 
 ## Quick Start
-This GIS is designed to run on your Heroku environment.<br>
+This app is designed to run on your Heroku environment.<br>
 You need [Heroku account](https://signup.heroku.com/) before quick start.
 
 ```
@@ -76,4 +78,4 @@ example: Paris, Seattle, Tokyo...
 * [Bulma](https://bulma.io/)
 
 # Lisence
-This GIS is licensed MIT.
+MIT
