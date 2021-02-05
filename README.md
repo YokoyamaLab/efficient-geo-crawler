@@ -19,7 +19,7 @@ $ npm install
 $ npm start
 
 # option
-## If you have mongoDB and save places to your machine, do this before 4.
+## If you have mongoDB and save places to your local, do this before 4.
 $ sudo service mongod start
 ```
 
@@ -27,3 +27,6 @@ $ sudo service mongod start
 * Node.js: ^12.18.3
 * npm: ^6.14.6
 * MongoDB: ^4.2.9
+
+## Link
+* [How to get the API key of Google Places API](https://developers.google.com/places/web-service/get-api-key)
